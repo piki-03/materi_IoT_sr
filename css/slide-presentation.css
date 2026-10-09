@@ -1,0 +1,113 @@
+/* ==========================================================================
+   FULLSCREEN PRESENTATION MODE (PENGGANTI PPT)
+   Sentral Robotika
+   ========================================================================== */
+
+body.presentation-mode {
+  overflow: hidden;
+}
+
+body.presentation-mode #topbar,
+body.presentation-mode #slides-sidebar,
+body.presentation-mode #bottom-bar {
+  display: none !important;
+}
+
+body.presentation-mode #workspace {
+  height: 100vh;
+  width: 100vw;
+}
+
+body.presentation-mode #canvas-area {
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #08080A;
+}
+
+body.presentation-mode .slide-frame {
+  max-width: 100vw;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  border-radius: 0;
+  border: none;
+  padding: 48px 72px 80px 72px;
+  box-shadow: none;
+  background: radial-gradient(circle at 50% 20%, #161620 0%, #0a0a0d 100%);
+}
+
+body.presentation-mode .slide-title {
+  font-size: 38px;
+  letter-spacing: -0.5px;
+}
+
+body.presentation-mode .slide-subtitle {
+  font-size: 18px;
+}
+
+body.presentation-mode .point-item {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+body.presentation-mode .diagram-container {
+  height: 320px;
+}
+
+body.presentation-mode .code-editor-area {
+  font-size: 14px;
+}
+
+/* Floating Presentation HUD (Controller) */
+#presentation-hud {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(22, 22, 29, 0.88);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-full);
+  padding: 6px 18px;
+  display: none;
+  align-items: center;
+  gap: 14px;
+  z-index: 9999;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  opacity: 0.2;
+  transition: opacity var(--transition-normal);
+}
+
+body.presentation-mode #presentation-hud {
+  display: flex;
+}
+
+#presentation-hud:hover,
+body.presentation-mode:hover #presentation-hud {
+  opacity: 1;
+}
+
+.hud-counter {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--saweria-yellow);
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Slide Transition Animations */
+.slide-frame.slide-fade-in {
+  animation: slideFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

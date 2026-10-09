@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentral Robotika - Studio Presentasi IoT & Tutorial Wokwi Blynk</title>
+  
+  <!-- SEO & Meta Tags -->
+  <meta name="description" content="Platform presentasi dan tutorial interaktif Wokwi & Blynk IoT 2.0 untuk Sentral Robotika. Dilengkapi editor materi ala Canva, upload gambar rangkaian, dan fitur OCR foto ke token Blynk siap copy.">
+  <meta name="author" content="Sentral Robotika">
+
+  <!-- Google Fonts: Plus Jakarta Sans & Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- CSS Stylesheets (Saweria Theme & Canva-like Layout) -->
+  <link rel="stylesheet" href="css/saweria-theme.css">
+  <link rel="stylesheet" href="css/studio-layout.css">
+  <link rel="stylesheet" href="css/slide-presentation.css">
+  <link rel="stylesheet" href="css/token-modal.css">
+  <link rel="stylesheet" href="css/auth-login.css">
+
+  <!-- Tesseract.js OCR Engine (Client-side, Privacy-Safe) -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+
+  <!-- Main App Container -->
+  <div id="app-container">
+
+    <!-- ==========================================================================
+         TOPBAR (Saweria Design Style)
+         ========================================================================== -->
+    <header id="topbar">
+      <div class="topbar-left">
+        <div class="brand-badge" title="Sentral Robotika Studio">
+          <div class="brand-icon">🤖</div>
+          <div class="brand-info">
+            <span class="brand-title">SENTRAL ROBOTIKA</span>
+            <span class="brand-sub">IoT Slide Studio</span>
+          </div>
+        </div>
+
+        <!-- Guru can edit title, Murid sees static text -->
+        <input type="text" id="project-title-input" class="project-title-input" value="Tutorial Wokwi & Blynk IoT 2.0" title="Klik untuk mengubah judul presentasi">
+        <span id="project-title-display" class="project-title-display">Tutorial Wokwi &amp; Blynk IoT 2.0</span>
+      </div>
+
+      <div class="topbar-actions">
+        <!-- Role Badge (Guru / Murid) -->
+        <div id="topbar-role-badge"></div>
+        <!-- OCR Foto ke Token CTA -->
+        <button id="btn-topbar-ocr" class="btn btn-secondary btn-open-ocr-token" title="Ekstrak token Blynk dari gambar/screenshot">
+          <span>🔑</span>
+          <span>Foto ke Token (OCR)</span>
+        </button>
+
+        <!-- Presentation Fullscreen CTA -->
+        <button id="btn-toggle-presentation" class="btn btn-primary" title="Buka mode presentasi layar penuh (F5 atau F)">
+          <span>📽️</span>
+          <span>Mode Presentasi (F5)</span>
+        </button>
+
+        <!-- Save / Export JSON -->
+        <button id="btn-export-json" class="btn btn-secondary" title="Unduh materi ke file JSON cadangan">
+          <span>💾</span>
+          <span>Ekspor</span>
+        </button>
+
+        <!-- Import JSON Trigger -->
+        <input type="file" id="file-import-input" accept=".json" style="display: none;">
+        <button id="btn-import-json-trigger" class="btn btn-secondary" title="Muat materi dari file JSON">
+          <span>📂</span>
+          <span>Impor</span>
+        </button>
+
+        <!-- Reset Button -->
+        <button id="btn-reset-default" class="btn btn-secondary" title="Kembalikan ke materi bawaan Wokwi & Blynk">
+          <span>🔄</span>
+        </button>
+
+        <!-- Saweria Support CTA -->
+        <button id="btn-open-saweria" class="btn btn-accent" title="Dukung Sentral Robotika ala Saweria">
+          <span>☕</span>
+          <span>Dukung</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ==========================================================================
+         WORKSPACE SPLIT
+         ========================================================================== -->
+    <main id="workspace">
+
+      <!-- Left Sidebar: Canva-like Slide Thumbnails -->
+      <aside id="slides-sidebar">
+        <div class="sidebar-header">
+          <span class="sidebar-title">Daftar Bab / Slide</span>
+          <span class="badge badge-yellow">Interaktif</span>
+        </div>
+
+        <!-- Dynamic Thumbnails Container -->
+        <div id="slide-thumbnails-list">
+          <!-- Populated by slide-manager.js -->
+        </div>
+
+        <div class="sidebar-footer">
+          <button id="btn-add-slide" class="btn btn-primary" style="width: 100%;">
+            <span>+</span>
+            <span>Tambah Bab Baru</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Center Presentation Stage / Canvas Area -->
+      <section id="canvas-area">
+        
+        <!-- 16:9 Slide Presentation Frame -->
+        <article id="current-slide-frame" class="slide-frame">
+          
+          <!-- Slide Meta Header -->
+          <div class="slide-meta-row">
+            <span id="slide-tag" class="slide-tag-badge editable" contenteditable="true" title="Klik untuk mengedit kategori/tag">BAB 1 • PENGENALAN</span>
+            <span class="slide-hint">💡 Klik teks, poin, atau gambar untuk mengedit langsung</span>
+          </div>
+
+          <!-- Slide Titles -->
+          <h1 id="slide-title" class="slide-title editable" contenteditable="true" title="Klik untuk mengedit judul bab">Pengenalan Wokwi Simulator & Blynk IoT 2.0</h1>
+          <p id="slide-subtitle" class="slide-subtitle editable" contenteditable="true" title="Klik untuk mengedit deskripsi">Membangun prototipe Internet of Things (IoT) berbasis ESP32 tanpa memerlukan perangkat keras fisik</p>
+
+          <!-- Slide Body 2-Column Split -->
+          <div class="slide-body-grid">
+            
+            <!-- Left Column: Rich Instructions & Points -->
+            <div class="slide-left-col">
+              <div class="card-section">
+                <div class="section-label">
+                  <span>📌</span>
+                  <span>Materi & Panduan Praktikum</span>
+                </div>
+                <ul id="slide-points-list" class="points-list">
+                  <!-- Populated by slide-manager.js -->
+                </ul>
+              </div>
+            </div>
+
+            <!-- Right Column: Diagram & Code -->
+            <div class="slide-right-col">
+              
+              <!-- Diagram / Image Container -->
+              <div class="diagram-container">
+                <img id="slide-image" class="diagram-image" src="assets/default-diagram.svg" alt="Diagram Skema Rangkaian">
+                
+                <!-- Floating Diagram Toolbar -->
+                <div class="diagram-toolbar">
+                  <input type="file" id="slide-image-input" accept="image/*" style="display: none;">
+                  <button id="btn-upload-image" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px;">
+                    <span>📷</span>
+                    <span>Ganti / Upload Gambar</span>
+                  </button>
+                  <button id="btn-reset-image" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" title="Reset ke Diagram Awal">
+                    <span>↺</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Code Block -->
+              <div class="code-container">
+                <div class="code-header">
+                  <div class="code-lang-tag">
+                    <span>⚡</span>
+                    <span>C++ / ESP32 Arduino</span>
+                  </div>
+                  <div class="code-header-actions">
+                    <button id="btn-open-wokwi" class="btn btn-secondary" style="padding: 3px 8px; font-size: 11px;" title="Buka Wokwi Simulator Online">
+                      <span>🚀 Buka di Wokwi</span>
+                    </button>
+                    <button id="btn-copy-code" class="btn btn-primary" style="padding: 3px 10px; font-size: 11px;" title="Salin seluruh kode ke clipboard">
+                      <span>📋 Salin Kode</span>
+                    </button>
+                  </div>
+                </div>
+                <pre id="slide-code" class="code-editor-area" contenteditable="true" spellcheck="false" title="Klik untuk mengedit kode"></pre>
+              </div>
+
+            </div>
+
+          </div>
+
+        </article>
+
+      </section>
+
+    </main>
+
+    <!-- ==========================================================================
+         BOTTOM BAR (Studio Navigation)
+         ========================================================================== -->
+    <footer id="bottom-bar">
+      <div class="slide-counter-wrapper">
+        <button id="btn-prev-slide" class="btn btn-secondary" style="padding: 4px 10px;" title="Bab Sebelumnya (Panah Kiri)">◀</button>
+        <span id="slide-counter" class="slide-counter">Bab 1 / 5</span>
+        <button id="btn-next-slide" class="btn btn-secondary" style="padding: 4px 10px;" title="Bab Selanjutnya (Panah Kanan)">▶</button>
+      </div>
+
+      <div class="hotkey-hint">
+        <span>Navigasi Presentasi:</span>
+        <kbd class="kbd-badge">◀</kbd>
+        <kbd class="kbd-badge">▶</kbd>
+        <span>Ganti Slide</span>
+        <span style="margin: 0 4px">•</span>
+        <kbd class="kbd-badge">F</kbd>
+        <span>Layar Penuh</span>
+        <span style="margin: 0 4px">•</span>
+        <kbd class="kbd-badge">Ctrl+V</kbd>
+        <span>Paste Foto Token</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ==========================================================================
+       FLOATING HUD (Controller for Fullscreen Presentation Mode)
+       ========================================================================== -->
+  <div id="presentation-hud">
+    <button id="hud-prev-slide" class="btn btn-secondary" style="padding: 6px 12px;">◀ Sebelumnya</button>
+    <span id="hud-counter" class="hud-counter">Bab 1 / 5</span>
+    <button id="hud-next-slide" class="btn btn-primary" style="padding: 6px 12px;">Selanjutnya ▶</button>
+    <button class="btn btn-secondary btn-open-ocr-token" style="padding: 6px 12px;">🔑 Foto ke Token</button>
+    <button id="hud-exit-presentation" class="btn btn-danger" style="padding: 6px 12px;" title="Keluar Mode Presentasi (ESC)">✕ Keluar</button>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL: FOTO KE TOKEN SIAP COPY (OCR Extractor)
+       ========================================================================== -->
+  <div id="token-ocr-modal" class="modal-backdrop">
+    <div class="modal-window">
+      
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge">🔑</div>
+          <div>
+            <div class="modal-title">Foto ke Token Siap Copy</div>
+            <div class="modal-subtitle">Upload / tempel screenshot Blynk untuk mengekstrak Auth Token otomatis</div>
+          </div>
+        </div>
+        <button class="modal-close-btn modal-close-trigger">✕</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- Dropzone Area -->
+        <input type="file" id="ocr-file-input" accept="image/*" style="display: none;">
+        <div id="ocr-dropzone" class="dropzone-area">
+          <div class="dropzone-icon">📷</div>
+          <div class="dropzone-text-main">Tarik &amp; lepas gambar di sini, atau klik untuk memilih file</div>
+          <div class="dropzone-text-sub">Mendukung format PNG, JPG, JPEG, dan Screenshot</div>
+          <div class="paste-badge">
+            <span>💡</span>
+            <span>Atau tekan <strong>Ctrl + V</strong> untuk langsung tempel screenshot layar</span>
+          </div>
+        </div>
+
+        <!-- Image Preview & Scanning Laser -->
+        <div id="ocr-preview-box" class="scan-preview-box">
+          <img id="ocr-preview-img" class="scan-preview-img" src="" alt="Pratinjau Gambar Token">
+          <div id="ocr-laser" class="scanner-laser"></div>
+        </div>
+
+        <!-- OCR Scanning Progress -->
+        <div id="ocr-progress-container" class="ocr-progress-container">
+          <div id="ocr-status-text" class="ocr-status-text">
+            <span>Memindai gambar...</span>
+            <span>0%</span>
+          </div>
+          <div class="ocr-progress-track">
+            <div id="ocr-progress-bar" class="ocr-progress-bar"></div>
+          </div>
+        </div>
+
+        <!-- Combined Ready-to-Copy Token Code Block -->
+        <div id="token-results-container" class="token-results-container">
+          
+          <div class="token-combined-card">
+            <div class="token-card-header">
+              <div class="token-card-title">
+                <span class="badge badge-yellow" style="width: fit-content;">⭐ OUTPUT TOKEN SIAP COPY</span>
+                <span class="token-helper-text">3 baris konfigurasi Blynk siap ditempel langsung ke baris teratas kode Wokwi / Arduino IDE:</span>
+              </div>
+              <button id="btn-copy-combined-token" class="btn btn-primary" style="padding: 8px 18px; font-size: 13px;">
+                <span>📋</span>
+                <span>SALIN SEMUA TOKEN</span>
+              </button>
+            </div>
+
+            <div class="token-code-wrapper">
+              <pre id="extracted-combined-code" class="token-code-display" contenteditable="true" spellcheck="false">#define BLYNK_TEMPLATE_ID "TMPL62U0xhnR2"
+#define BLYNK_TEMPLATE_NAME "Kontrol Led dgn Blynk"
+#define BLYNK_AUTH_TOKEN "mbbOARWNhGvXh5uQBztvb5DFvA15m_9I"</pre>
+            </div>
+
+            <div class="token-card-footer">
+              <span class="token-hint-text">💡 Anda dapat mengklik dan mengedit teks kode di atas secara manual jika ada karakter yang ingin disesuaikan.</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-close-trigger">Tutup</button>
+        <button id="btn-apply-token-to-slide" class="btn btn-primary">
+          <span>⚡ Terapkan ke Kode Slide Ini</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL: DUKUNG SENTRAL ROBOTIKA (Saweria Style)
+       ========================================================================== -->
+  <div id="saweria-support-modal" class="modal-backdrop">
+    <div class="modal-window" style="max-width: 480px;">
+      
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge" style="background: rgba(250,174,43,0.15);">☕</div>
+          <div>
+            <div class="modal-title">Dukung Sentral Robotika</div>
+            <div class="modal-subtitle">Traktir kopi kreator tutorial IoT &amp; Wokwi</div>
+          </div>
+        </div>
+        <button class="modal-close-btn modal-close-trigger">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="saweria-card">
+          <div class="brand-icon" style="width: 64px; height: 64px; font-size: 32px; border-radius: 50%;">🤖</div>
+          <div>
+            <h3 style="font-size: 16px; font-weight: 800; color: #fff;">Sentral Robotika Indonesia</h3>
+            <p style="font-size: 12px; color: var(--text-muted);">Mendukung pendidikan robotika &amp; IoT terbuka untuk seluruh siswa &amp; mahasiswa</p>
+          </div>
+
+          <div class="nominal-grid">
+            <button class="nominal-btn active">Rp 10.000</button>
+            <button class="nominal-btn">Rp 25.000</button>
+            <button class="nominal-btn">Rp 50.000</button>
+          </div>
+
+          <div class="qris-mockup">
+            <!-- Simulated QRIS Graphic -->
+            <svg viewBox="0 0 140 140" width="130" height="130">
+              <rect width="140" height="140" fill="#ffffff" />
+              <!-- QR Patterns -->
+              <rect x="10" y="10" width="35" height="35" fill="#000" />
+              <rect x="15" y="15" width="25" height="25" fill="#fff" />
+              <rect x="20" y="20" width="15" height="15" fill="#000" />
+
+              <rect x="95" y="10" width="35" height="35" fill="#000" />
+              <rect x="100" y="15" width="25" height="25" fill="#fff" />
+              <rect x="105" y="20" width="15" height="15" fill="#000" />
+
+              <rect x="10" y="95" width="35" height="35" fill="#000" />
+              <rect x="15" y="100" width="25" height="25" fill="#fff" />
+              <rect x="20" y="105" width="15" height="15" fill="#000" />
+
+              <!-- QR Bits -->
+              <rect x="55" y="15" width="10" height="10" fill="#000" />
+              <rect x="75" y="25" width="10" height="10" fill="#000" />
+              <rect x="55" y="45" width="30" height="10" fill="#000" />
+              <rect x="15" y="55" width="30" height="10" fill="#000" />
+              <rect x="95" y="55" width="30" height="10" fill="#000" />
+              <rect x="55" y="65" width="10" height="25" fill="#000" />
+              <rect x="75" y="75" width="20" height="10" fill="#000" />
+              <rect x="55" y="105" width="30" height="10" fill="#000" />
+              <rect x="95" y="95" width="15" height="15" fill="#000" />
+              <rect x="115" y="115" width="15" height="15" fill="#000" />
+            </svg>
+          </div>
+          <p style="font-size: 11px; color: var(--text-muted);">Mendukung QRIS (GoPay, OVO, Dana, LinkAja, ShopeePay)</p>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="justify-content: center;">
+        <button id="btn-simulate-donation" class="btn btn-primary" style="width: 100%;">
+          <span>⚡ Kirim Dukungan (Simulasi)</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL: LOGIN ROLE (GURU & MURID)
+       ========================================================================== -->
+  <div id="login-modal" class="modal-backdrop">
+    <div class="login-window">
+      
+      <div class="login-header">
+        <div class="login-logo">🤖</div>
+        <div>
+          <h2 class="login-title">Masuk ke Sentral Robotika</h2>
+          <p class="login-desc">Pilih peran Anda untuk memulai studio presentasi &amp; praktikum IoT</p>
+        </div>
+      </div>
+
+      <div class="login-body">
+        
+        <!-- Role Selector Cards -->
+        <div class="role-options-grid">
+          <div id="role-card-guru" class="role-card active" title="Klik untuk login sebagai Guru">
+            <span class="role-icon">👨‍🏫</span>
+            <span class="role-name">Guru / Pengajar</span>
+            <span class="role-status-desc">Bisa edit materi, program, dan gambar</span>
+          </div>
+
+          <div id="role-card-murid" class="role-card" title="Klik untuk login sebagai Murid">
+            <span class="role-icon">🎓</span>
+            <span class="role-name">Murid / Siswa</span>
+            <span class="role-status-desc">Hanya baca, salin token &amp; praktikum</span>
+          </div>
+        </div>
+
+        <!-- Password / Code Input Form -->
+        <div class="login-form-group">
+          <label class="login-label">
+            <span>Kode Akses Masuk</span>
+            <span style="font-weight: normal; color: var(--saweria-yellow);">Wajib diisi</span>
+          </label>
+          <div class="login-input-wrap">
+            <input type="password" id="login-code-input" class="login-input" placeholder="Masukkan kode akses Anda..." autocomplete="off" spellcheck="false">
+          </div>
+        </div>
+
+        <button id="btn-submit-login" class="btn btn-primary btn-submit-login">
+          <span>🚀 Masuk Sekarang</span>
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- Application Logic Scripts -->
+  <script src="js/default-preset.js"></script>
+  <script src="js/storage-manager.js"></script>
+  <script src="js/auth-manager.js"></script>
+  <script src="js/ocr-token-extractor.js"></script>
+  <script src="js/slide-manager.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

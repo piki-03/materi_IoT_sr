@@ -1,0 +1,250 @@
+/* ==========================================================================
+   SAWERIA DESIGN SYSTEM & THEME
+   Sentral Robotika - Interactive IoT Presentation & Studio
+   ========================================================================== */
+
+:root {
+  /* Saweria Core Colors */
+  --saweria-yellow: #FAAE2B;
+  --saweria-yellow-hover: #FFC04D;
+  --saweria-yellow-light: rgba(250, 174, 43, 0.15);
+  --saweria-yellow-glow: rgba(250, 174, 43, 0.35);
+
+  /* Backgrounds & Surfaces (Saweria Dark Aesthetic) */
+  --bg-main: #0B0B0E;
+  --bg-surface-1: #131318;
+  --bg-surface-2: #1B1B22;
+  --bg-surface-3: #242430;
+  --bg-surface-hover: #2C2C3C;
+  --bg-card: #181820;
+
+  /* Borders & Dividers */
+  --border-subtle: #242430;
+  --border-medium: #323242;
+  --border-active: #FAAE2B;
+
+  /* Typography Colors */
+  --text-primary: #FFFFFF;
+  --text-secondary: #D4D4E2;
+  --text-muted: #8E8EA6;
+  --text-dark: #0F0F14;
+
+  /* State & Accents */
+  --accent-emerald: #00C49F;
+  --accent-emerald-light: rgba(0, 196, 159, 0.15);
+  --accent-blue: #38BDF8;
+  --accent-red: #FF5252;
+  --accent-purple: #A78BFA;
+
+  /* Font Families */
+  --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+
+  /* Shadows & Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 25px var(--saweria-yellow-glow);
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* CSS Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-surface-1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--saweria-yellow);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-family: var(--font-main);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  user-select: none;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--saweria-yellow);
+  color: var(--text-dark);
+  font-weight: 700;
+  box-shadow: 0 2px 12px var(--saweria-yellow-glow);
+}
+
+.btn-primary:hover {
+  background: var(--saweria-yellow-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 18px var(--saweria-yellow-glow);
+}
+
+.btn-secondary {
+  background: var(--bg-surface-2);
+  color: var(--text-primary);
+  border-color: var(--border-medium);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-surface-3);
+  border-color: var(--saweria-yellow);
+  color: var(--saweria-yellow);
+}
+
+.btn-accent {
+  background: var(--accent-emerald-light);
+  color: var(--accent-emerald);
+  border-color: rgba(0, 196, 159, 0.3);
+}
+
+.btn-accent:hover {
+  background: rgba(0, 196, 159, 0.25);
+  border-color: var(--accent-emerald);
+}
+
+.btn-danger {
+  background: rgba(255, 82, 82, 0.15);
+  color: var(--accent-red);
+  border-color: rgba(255, 82, 82, 0.3);
+}
+
+.btn-danger:hover {
+  background: rgba(255, 82, 82, 0.25);
+}
+
+.btn-icon {
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+}
+
+.btn-icon:hover {
+  background: var(--bg-surface-3);
+  color: var(--saweria-yellow);
+}
+
+/* Badges & Pills */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-yellow {
+  background: var(--saweria-yellow-light);
+  color: var(--saweria-yellow);
+  border: 1px solid rgba(250, 174, 43, 0.3);
+}
+
+.badge-emerald {
+  background: var(--accent-emerald-light);
+  color: var(--accent-emerald);
+  border: 1px solid rgba(0, 196, 159, 0.3);
+}
+
+/* Toast Notifications */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 99999;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  min-width: 280px;
+  max-width: 400px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-medium);
+  border-left: 4px solid var(--saweria-yellow);
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 13px;
+  animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast.toast-success {
+  border-left-color: var(--accent-emerald);
+}
+
+.toast.toast-error {
+  border-left-color: var(--accent-red);
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
