@@ -1,0 +1,373 @@
+/* ==========================================================================
+   RESPONSIVE LAYER — semua perangkat (ponsel, tablet, laptop, desktop, layar lebar)
+   Dimuat TERAKHIR agar menimpa aturan dasar. Pendekatan: desktop-first.
+
+   Breakpoint:
+   - >= 1800px : layar lebar / TV
+   - <= 1100px : laptop kecil & tablet landscape  (sidebar ramping, tombol topbar ikon-saja)
+   - <= 960px  : tablet portrait & ponsel landscape (sidebar jadi drawer, slide 1 kolom)
+   - <= 640px  : ponsel (topbar 2 baris, modal hampir layar penuh)
+   - <= 380px  : ponsel kecil
+   - (max-height: 520px) & landscape : ponsel landscape (kompres tinggi)
+   - (hover: none) : layar sentuh (aksi thumbnail selalu tampak, target sentuh lebih besar)
+   ========================================================================== */
+
+/* ---------- Elemen yang hanya muncul di layar kecil (default: disembunyikan) ---------- */
+.btn-sidebar-toggle,
+.sidebar-close,
+.sidebar-backdrop,
+.role-label-short {
+  display: none;
+}
+
+/* Tombol tema */
+.btn-theme-toggle {
+  padding: 8px 11px;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.login-theme-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  padding: 7px 10px;
+}
+
+/* Safe-area (notch / home indicator) */
+#topbar {
+  padding-left: calc(18px + var(--safe-left));
+  padding-right: calc(18px + var(--safe-right));
+  padding-top: var(--safe-top);
+  min-height: calc(58px + var(--safe-top));
+  height: auto;
+}
+
+#bottom-bar {
+  padding-left: calc(20px + var(--safe-left));
+  padding-right: calc(20px + var(--safe-right));
+  padding-bottom: var(--safe-bottom);
+  min-height: calc(44px + var(--safe-bottom));
+  height: auto;
+}
+
+#toast-container {
+  right: calc(24px + var(--safe-right));
+  bottom: calc(24px + var(--safe-bottom));
+}
+
+.topbar-left { min-width: 0; }
+.project-title-input { min-width: 0; text-overflow: ellipsis; }
+
+/* Pastikan media tidak pernah melebihi lebar kontainer */
+img, svg, video { max-width: 100%; }
+.points-list .point-item > span:last-child,
+.slide-title, .slide-subtitle { overflow-wrap: anywhere; }
+
+/* Anak grid/flex boleh menyusut (kode panjang tidak boleh melebarkan layout) */
+.slide-body-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
+.slide-left-col, .slide-right-col, .code-container, .card-section { min-width: 0; }
+
+/* Layar sangat lebar */
+@media (min-width: 1800px) {
+  .slide-frame { max-width: 1480px; }
+}
+
+/* ==========================================================================
+   <= 1100px : LAPTOP KECIL & TABLET LANDSCAPE
+   ========================================================================== */
+@media (max-width: 1100px) {
+  #topbar { gap: 10px; padding-left: calc(12px + var(--safe-left)); padding-right: calc(12px + var(--safe-right)); }
+  .topbar-actions { gap: 8px; }
+
+  /* Tombol topbar jadi ikon saja (label disembunyikan) */
+  .topbar-actions .btn { padding: 8px 11px; }
+  .topbar-actions .btn-label { display: none; }
+  .project-title-input { max-width: 200px; }
+
+  #slides-sidebar { width: 210px; }
+
+  #canvas-area { padding: 16px; }
+
+  /* Tinggi slide mengikuti isi (bukan rasio 16:9 kaku) agar tidak ada yang terpotong */
+  .slide-frame {
+    aspect-ratio: auto;
+    min-height: 0;
+    height: auto;
+    padding: 28px 26px;
+  }
+  .slide-body-grid { gap: 20px; flex: none; }
+  .slide-left-col { overflow: visible; padding-right: 0; }
+  .slide-right-col { min-height: auto; }
+  .code-container { min-height: 240px; flex: none; }
+  .code-editor-area { max-height: 360px; }
+}
+
+/* ==========================================================================
+   <= 960px : TABLET PORTRAIT & PONSEL LANDSCAPE
+   Sidebar -> drawer, slide 1 kolom, bottom bar disederhanakan
+   ========================================================================== */
+@media (max-width: 960px) {
+  .btn-sidebar-toggle { display: inline-flex; padding: 8px 12px; font-size: 16px; line-height: 1; }
+  .topbar-left { gap: 10px; }
+  .brand-info { display: none; }
+  .project-title-input, .project-title-display { max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Drawer */
+  #slides-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(320px, 86vw);
+    z-index: 1200;
+    transform: translateX(-102%);
+    visibility: hidden;
+    transition: transform var(--transition-normal), visibility 0s linear 0.25s;
+    box-shadow: none;
+    padding-top: var(--safe-top);
+    padding-left: var(--safe-left);
+    padding-bottom: var(--safe-bottom);
+  }
+  #slides-sidebar.sidebar-open {
+    transform: translateX(0);
+    visibility: visible;
+    transition-delay: 0s;
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    background: var(--overlay-bg);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-normal);
+  }
+  .sidebar-backdrop.active { opacity: 1; pointer-events: auto; }
+  body.sidebar-drawer-open { overflow: hidden; }
+
+  .sidebar-close { display: inline-flex; margin-left: 8px; }
+  .sidebar-header .badge-interaktif { margin-left: auto; }
+  .sidebar-header { padding-right: 10px; }
+
+  /* Slide: satu kolom */
+  .slide-frame { padding: 24px 22px; border-radius: var(--radius-lg); }
+  .slide-body-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .slide-title { font-size: 24px; }
+  .slide-subtitle { font-size: 14px; margin-bottom: 18px; }
+  .diagram-container { height: auto; aspect-ratio: 16 / 9; max-height: 340px; }
+
+  /* Bottom bar: hanya navigasi, petunjuk keyboard disembunyikan */
+  .hotkey-hint { display: none; }
+  #bottom-bar { justify-content: center; }
+
+  /* Mode presentasi */
+  body.presentation-mode .slide-frame {
+    padding: 28px 24px 110px;
+    border-radius: 0;
+  }
+  body.presentation-mode .slide-title { font-size: 28px; }
+  body.presentation-mode .slide-subtitle { font-size: 15px; }
+  body.presentation-mode .point-item { font-size: 15px; }
+  body.presentation-mode .diagram-container { height: auto; aspect-ratio: 16 / 9; max-height: 360px; }
+  body.presentation-mode .code-editor-area { font-size: 13px; }
+}
+
+/* ==========================================================================
+   <= 640px : PONSEL
+   ========================================================================== */
+@media (max-width: 640px) {
+  html, body { font-size: 14px; }
+
+  /* Topbar 2 baris: [☰ logo judul … tema] / [aksi — bisa digeser] */
+  #topbar {
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: 8px;
+    padding-top: calc(8px + var(--safe-top));
+    padding-bottom: 8px;
+  }
+  .topbar-left { flex: 1 1 100%; width: 100%; }
+  .brand-info { display: none; }
+  .brand-badge { flex-shrink: 0; }
+  .project-title-input,
+  .project-title-display {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+    font-size: 16px; /* cegah auto-zoom iOS saat fokus */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  body.role-murid .project-title-display { flex: 1 1 auto; min-width: 0; }
+
+  .topbar-actions {
+    flex: 1 1 100%;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .topbar-actions::-webkit-scrollbar { display: none; }
+  .topbar-actions > * { flex-shrink: 0; }
+  .topbar-actions .btn { min-height: 40px; min-width: 40px; }
+
+  /* Badge peran lebih ringkas */
+  .user-role-badge { padding: 4px 8px; font-size: 11px; }
+  .btn-switch-role { margin-left: 6px; }
+  .role-label-full { display: none; }
+  .role-label-short { display: inline; }
+
+  /* Slide */
+  #canvas-area { padding: 10px; }
+  .slide-frame { padding: 18px 14px; border-radius: var(--radius-md); }
+  .slide-meta-row { flex-wrap: wrap; gap: 6px 10px; }
+  .slide-hint { display: none; }
+  .slide-tag-badge { font-size: 11px; max-width: 100%; }
+  .slide-title { font-size: 21px; }
+  .slide-subtitle { font-size: 13.5px; margin-bottom: 14px; }
+  .card-section { padding: 14px 14px; }
+  .point-item { font-size: 13.5px; }
+  .diagram-container { max-height: 260px; }
+
+  /* Toolbar diagram: pindah ke bawah gambar agar tidak menutupi diagram */
+  .diagram-container { flex-direction: column; justify-content: flex-start; max-height: none; aspect-ratio: auto; }
+  .diagram-image { height: auto; aspect-ratio: 16 / 9; }
+  .diagram-toolbar {
+    position: static;
+    align-self: stretch;
+    justify-content: flex-end;
+    border-radius: 0;
+    border-width: 1px 0 0 0;
+    background: var(--bg-surface-2);
+    backdrop-filter: none;
+  }
+  .diagram-toolbar .btn { min-height: 34px; }
+
+  /* Kode */
+  .code-header { height: auto; min-height: 38px; flex-wrap: wrap; gap: 6px; padding: 6px 10px; }
+  .code-header-actions { flex-wrap: wrap; }
+  .code-header-actions .btn { min-height: 32px; }
+  .code-editor-area { padding: 12px 12px; font-size: 12px; max-height: 320px; }
+
+  /* Bottom bar */
+  .slide-counter-wrapper { width: 100%; justify-content: space-between; }
+  .slide-counter-wrapper .btn { min-width: 48px; min-height: 36px; }
+
+  /* Presentasi */
+  body.presentation-mode .slide-frame { padding: 18px 14px 130px; }
+  body.presentation-mode .slide-title { font-size: 23px; }
+  #presentation-hud {
+    left: calc(8px + var(--safe-left));
+    right: calc(8px + var(--safe-right));
+    bottom: calc(8px + var(--safe-bottom));
+    transform: none;
+    width: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius-lg);
+    opacity: 0.95;
+  }
+  .hud-counter { min-width: 64px; }
+  #presentation-hud .btn { min-height: 38px; }
+  body.presentation-mode #toast-container { bottom: calc(150px + var(--safe-bottom)); }
+
+  /* Toast selebar layar */
+  #toast-container { left: calc(12px + var(--safe-left)); right: calc(12px + var(--safe-right)); bottom: calc(14px + var(--safe-bottom)); }
+  .toast { min-width: 0; max-width: none; width: 100%; }
+
+  /* Modal */
+  .modal-backdrop { padding: 10px; align-items: flex-end; }
+  .modal-window { max-height: 94vh; max-height: 94dvh; border-radius: var(--radius-lg); max-width: 100% !important; }
+  .modal-header { padding: 14px 16px; }
+  .modal-title { font-size: 15px; }
+  .modal-subtitle { font-size: 10.5px; }
+  .modal-body { padding: 16px; gap: 16px; }
+  .modal-footer { padding: 12px 16px; flex-wrap: wrap; gap: 8px; padding-bottom: calc(12px + var(--safe-bottom)); }
+  .modal-footer .btn { flex: 1 1 140px; min-height: 42px; }
+  .dropzone-area { padding: 20px 14px; }
+  .dropzone-text-main { font-size: 13px; }
+  .paste-badge { display: none; } /* Ctrl+V tidak relevan di ponsel */
+  .token-combined-card { padding: 14px; }
+  .token-card-header .btn { width: 100%; }
+  .token-code-wrapper { padding: 12px; }
+  .token-code-display { font-size: 12px; }
+  .token-card-footer { display: block; }
+  .nominal-grid { gap: 8px; }
+  .nominal-btn { padding: 10px 4px; font-size: 12px; }
+
+  /* Login */
+  #login-modal { padding: 12px; align-items: center; overflow-y: auto; }
+  .login-window { max-height: 96vh; max-height: 96dvh; overflow-y: auto; }
+  .login-header { padding: 56px 20px 12px; gap: 10px; }
+  .login-logo { width: 56px; height: 56px; font-size: 28px; }
+  .login-title { font-size: 19px; }
+  .login-desc { font-size: 12.5px; }
+  .login-body { padding: 14px 20px 22px; gap: 16px; }
+  .role-options-grid { gap: 10px; }
+  .role-card { padding: 14px 8px; }
+  .role-name { font-size: 13px; }
+  .login-input { font-size: 16px; padding: 12px 14px; }
+  .btn-submit-login { min-height: 46px; }
+}
+
+/* ==========================================================================
+   <= 380px : PONSEL KECIL
+   ========================================================================== */
+@media (max-width: 380px) {
+  .slide-title { font-size: 19px; }
+  .role-options-grid { grid-template-columns: 1fr; }
+  .role-card { flex-direction: row; justify-content: flex-start; text-align: left; gap: 12px; padding: 12px 14px; }
+  .role-card .role-status-desc { display: none; }
+  .nominal-grid { grid-template-columns: 1fr; }
+  .code-editor-area { font-size: 11.5px; }
+}
+
+/* ==========================================================================
+   PONSEL LANDSCAPE / LAYAR PENDEK : kompres tinggi
+   ========================================================================== */
+@media (max-height: 520px) and (orientation: landscape) {
+  #topbar { min-height: calc(46px + var(--safe-top)); }
+  #bottom-bar { min-height: calc(36px + var(--safe-bottom)); }
+  .brand-icon { width: 30px; height: 30px; font-size: 16px; }
+  #canvas-area { padding: 10px; }
+  .modal-window { max-height: 96vh; max-height: 96dvh; }
+  .modal-backdrop { align-items: center; padding: 8px; }
+  .login-window { max-height: 98vh; max-height: 98dvh; overflow-y: auto; }
+  .login-header { padding: 16px 20px 6px; flex-direction: row; text-align: left; }
+  .login-logo { width: 44px; height: 44px; font-size: 22px; flex-shrink: 0; }
+  .login-body { padding: 8px 20px 16px; gap: 10px; }
+  body.presentation-mode .slide-frame { padding-bottom: 80px; }
+  #presentation-hud { bottom: calc(6px + var(--safe-bottom)); padding: 4px 12px; }
+}
+
+/* ==========================================================================
+   LAYAR SENTUH (tanpa hover)
+   ========================================================================== */
+@media (hover: none) {
+  /* Aksi duplikat/hapus bab harus selalu terlihat karena tidak ada hover */
+  .thumb-actions { opacity: 1; }
+  .thumb-btn { padding: 6px 8px; font-size: 13px; }
+  .thumb-card:hover { transform: none; }
+  .btn-primary:hover { transform: none; }
+  .diagram-toolbar { opacity: 1; }
+  #presentation-hud { opacity: 0.95; }
+}
+
+/* Hormati preferensi "kurangi gerakan" */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

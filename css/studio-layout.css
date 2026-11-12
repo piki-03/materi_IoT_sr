@@ -6,8 +6,9 @@
 #app-container {
   display: flex;
   flex-direction: column;
-  width: 100vw;
+  width: 100%;
   height: 100vh;
+  height: 100dvh;
   background-color: var(--bg-main);
   overflow: hidden;
 }
@@ -70,7 +71,7 @@
 .brand-sub {
   font-size: 10px;
   font-weight: 700;
-  color: var(--saweria-yellow);
+  color: var(--accent-text);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -111,7 +112,7 @@
 #workspace {
   display: flex;
   flex: 1;
-  height: calc(100vh - 58px - 44px);
+  min-height: 0;
   overflow: hidden;
   position: relative;
 }
@@ -177,7 +178,7 @@
 
 .thumb-card.active {
   border-color: var(--saweria-yellow);
-  background: rgba(250, 174, 43, 0.08);
+  background: var(--active-tint);
   box-shadow: 0 0 16px rgba(250, 174, 43, 0.2);
 }
 
@@ -190,7 +191,7 @@
 .thumb-number {
   font-size: 11px;
   font-weight: 700;
-  color: var(--saweria-yellow);
+  color: var(--accent-text);
   background: rgba(250, 174, 43, 0.15);
   padding: 2px 7px;
   border-radius: var(--radius-sm);
@@ -258,11 +259,12 @@
    ========================================================================== */
 #canvas-area {
   flex: 1;
-  background: radial-gradient(circle at center, #141419 0%, #0a0a0c 100%);
+  background: var(--canvas-bg);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   overflow: auto;
+  min-width: 0;
   padding: 24px;
   position: relative;
 }
@@ -276,7 +278,9 @@
   background: var(--bg-card);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-xl);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  box-shadow: var(--shadow-slide);
+  margin: auto;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   padding: 36px 42px;
@@ -302,7 +306,7 @@
   padding: 4px 12px;
   border-radius: var(--radius-full);
   background: var(--saweria-yellow-light);
-  color: var(--saweria-yellow);
+  color: var(--accent-text);
   border: 1px solid rgba(250, 174, 43, 0.3);
 }
 
@@ -321,11 +325,11 @@
 }
 
 .editable:hover {
-  background: rgba(250, 174, 43, 0.05);
+  background: var(--hover-tint);
 }
 
 .editable:focus {
-  background: rgba(250, 174, 43, 0.12);
+  background: var(--focus-tint);
   box-shadow: 0 0 0 1px var(--saweria-yellow);
 }
 
@@ -373,7 +377,7 @@
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  color: var(--saweria-yellow);
+  color: var(--accent-text);
   letter-spacing: 0.8px;
   margin-bottom: 10px;
   display: flex;
@@ -440,7 +444,7 @@
   right: 10px;
   display: flex;
   gap: 8px;
-  background: rgba(19, 19, 24, 0.85);
+  background: var(--glass-bg);
   backdrop-filter: blur(8px);
   padding: 5px 8px;
   border-radius: var(--radius-md);
@@ -455,7 +459,7 @@
 
 /* Code Editor Block */
 .code-container {
-  background: #0d0d11;
+  background: var(--code-bg);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
   display: flex;
@@ -482,7 +486,7 @@
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
-  color: var(--saweria-yellow);
+  color: var(--accent-text);
 }
 
 .code-header-actions {
@@ -496,8 +500,8 @@
   font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.6;
-  color: #f8f8f2;
-  overflow-y: auto;
+  color: var(--code-text);
+  overflow: auto;
   white-space: pre;
   tab-size: 2;
   outline: none;
@@ -506,17 +510,17 @@
 }
 
 .code-editor-area.editable-active:hover {
-  background: rgba(250, 174, 43, 0.05); /* Efek hover untuk editable */
+  background: var(--hover-tint); /* Efek hover untuk editable */
   border-color: var(--saweria-yellow); /* Border saat hover */
 }
 
 .code-editor-area.editable-active:focus {
-  background: rgba(250, 174, 43, 0.12); /* Efek focus untuk editable */
+  background: var(--focus-tint); /* Efek focus untuk editable */
   box-shadow: 0 0 0 1px var(--saweria-yellow); /* Shadow saat focus */
 }
 
 .code-editor-area:focus {
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--code-focus);
 }
 
 /* ==========================================================================
@@ -570,5 +574,5 @@
   padding: 1px 6px;
   font-size: 10px;
   font-family: var(--font-mono);
-  color: var(--saweria-yellow);
+  color: var(--accent-text);
 }

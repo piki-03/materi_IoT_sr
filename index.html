@@ -2,7 +2,21 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0B0B0E">
+  <meta name="color-scheme" content="dark light">
+
+  <!-- Terapkan tema SEBELUM render agar tidak berkedip -->
+  <script>
+    (function () {
+      var t = "dark";
+      try {
+        var s = localStorage.getItem("sentral_robotika_theme_v1");
+        t = (s === "light" || s === "dark") ? s : (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+      } catch (e) {}
+      document.documentElement.setAttribute("data-theme", t);
+    })();
+  </script>
   <title>Sentral Robotika - Studio Presentasi IoT & Tutorial Wokwi Blynk</title>
   
   <!-- SEO & Meta Tags -->
@@ -20,6 +34,7 @@
   <link rel="stylesheet" href="css/slide-presentation.css">
   <link rel="stylesheet" href="css/token-modal.css">
   <link rel="stylesheet" href="css/auth-login.css">
+  <link rel="stylesheet" href="css/responsive.css">
 
   <!-- Tesseract.js OCR Engine (Client-side, Privacy-Safe) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -34,6 +49,10 @@
          ========================================================================== -->
     <header id="topbar">
       <div class="topbar-left">
+        <!-- Hamburger: buka daftar bab (layar kecil) -->
+        <button id="btn-toggle-sidebar" class="btn btn-secondary btn-sidebar-toggle" aria-label="Buka daftar bab" aria-controls="slides-sidebar" aria-expanded="false" title="Daftar Bab">
+          <span aria-hidden="true">☰</span>
+        </button>
         <div class="brand-badge" title="Sentral Robotika Studio">
           <div class="brand-icon">🤖</div>
           <div class="brand-info">
@@ -51,39 +70,44 @@
         <!-- Role Badge (Guru / Murid) -->
         <div id="topbar-role-badge"></div>
         <!-- OCR Foto ke Token CTA -->
-        <button id="btn-topbar-ocr" class="btn btn-secondary btn-open-ocr-token" title="Ekstrak token Blynk dari gambar/screenshot">
+        <button id="btn-topbar-ocr" class="btn btn-secondary btn-open-ocr-token" title="Ekstrak token Blynk dari gambar/screenshot" aria-label="Foto ke Token (OCR)">
           <span>🔑</span>
-          <span>Foto ke Token (OCR)</span>
+          <span class="btn-label">Foto ke Token (OCR)</span>
         </button>
 
         <!-- Presentation Fullscreen CTA -->
-        <button id="btn-toggle-presentation" class="btn btn-primary" title="Buka mode presentasi layar penuh (F5 atau F)">
+        <button id="btn-toggle-presentation" class="btn btn-primary" title="Buka mode presentasi layar penuh (F5 atau F)" aria-label="Mode Presentasi (F5)">
           <span>📽️</span>
-          <span>Mode Presentasi (F5)</span>
+          <span class="btn-label">Mode Presentasi (F5)</span>
         </button>
 
         <!-- Save / Export JSON -->
-        <button id="btn-export-json" class="btn btn-secondary" title="Unduh materi ke file JSON cadangan">
+        <button id="btn-export-json" class="btn btn-secondary" title="Unduh materi ke file JSON cadangan" aria-label="Ekspor">
           <span>💾</span>
-          <span>Ekspor</span>
+          <span class="btn-label">Ekspor</span>
         </button>
 
         <!-- Import JSON Trigger -->
         <input type="file" id="file-import-input" accept=".json" style="display: none;">
-        <button id="btn-import-json-trigger" class="btn btn-secondary" title="Muat materi dari file JSON">
+        <button id="btn-import-json-trigger" class="btn btn-secondary" title="Muat materi dari file JSON" aria-label="Impor">
           <span>📂</span>
-          <span>Impor</span>
+          <span class="btn-label">Impor</span>
         </button>
 
         <!-- Reset Button -->
-        <button id="btn-reset-default" class="btn btn-secondary" title="Kembalikan ke materi bawaan Wokwi & Blynk">
+        <button id="btn-reset-default" class="btn btn-secondary" aria-label="Reset materi" title="Kembalikan ke materi bawaan Wokwi & Blynk">
           <span>🔄</span>
         </button>
 
+        <!-- Theme Toggle (Terang / Gelap) -->
+        <button class="btn btn-secondary btn-theme-toggle js-theme-toggle" type="button" aria-label="Ganti ke mode terang" title="Ganti tema terang / gelap">
+          <span class="theme-icon" aria-hidden="true">☀️</span>
+        </button>
+
         <!-- Saweria Support CTA -->
-        <button id="btn-open-saweria" class="btn btn-accent" title="Dukung Sentral Robotika ala Saweria">
+        <button id="btn-open-saweria" class="btn btn-accent" title="Dukung Sentral Robotika ala Saweria" aria-label="Dukung">
           <span>☕</span>
-          <span>Dukung</span>
+          <span class="btn-label">Dukung</span>
         </button>
       </div>
     </header>
@@ -93,11 +117,15 @@
          ========================================================================== -->
     <main id="workspace">
 
+      <!-- Backdrop untuk drawer sidebar (layar kecil) -->
+      <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
       <!-- Left Sidebar: Canva-like Slide Thumbnails -->
       <aside id="slides-sidebar">
         <div class="sidebar-header">
           <span class="sidebar-title">Daftar Bab / Slide</span>
-          <span class="badge badge-yellow">Interaktif</span>
+          <span class="badge badge-yellow badge-interaktif">Interaktif</span>
+          <button id="btn-close-sidebar" class="modal-close-btn sidebar-close" aria-label="Tutup daftar bab">✕</button>
         </div>
 
         <!-- Dynamic Thumbnails Container -->
@@ -228,6 +256,7 @@
     <span id="hud-counter" class="hud-counter">Bab 1 / 5</span>
     <button id="hud-next-slide" class="btn btn-primary" style="padding: 6px 12px;">Selanjutnya ▶</button>
     <button class="btn btn-secondary btn-open-ocr-token" style="padding: 6px 12px;">🔑 Foto ke Token</button>
+    <button class="btn btn-secondary btn-theme-toggle js-theme-toggle" type="button" style="padding: 6px 12px;" aria-label="Ganti tema" title="Ganti tema terang / gelap"><span class="theme-icon" aria-hidden="true">☀️</span></button>
     <button id="hud-exit-presentation" class="btn btn-danger" style="padding: 6px 12px;" title="Keluar Mode Presentasi (ESC)">✕ Keluar</button>
   </div>
 
@@ -340,7 +369,7 @@
         <div class="saweria-card">
           <div class="brand-icon" style="width: 64px; height: 64px; font-size: 32px; border-radius: 50%;">🤖</div>
           <div>
-            <h3 style="font-size: 16px; font-weight: 800; color: #fff;">Sentral Robotika Indonesia</h3>
+            <h3 style="font-size: 16px; font-weight: 800; color: var(--text-primary);">Sentral Robotika Indonesia</h3>
             <p style="font-size: 12px; color: var(--text-muted);">Mendukung pendidikan robotika &amp; IoT terbuka untuk seluruh siswa &amp; mahasiswa</p>
           </div>
 
@@ -398,6 +427,7 @@
        ========================================================================== -->
   <div id="login-modal" class="modal-backdrop">
     <div class="login-window">
+      <button class="btn btn-secondary btn-theme-toggle js-theme-toggle login-theme-toggle" type="button" aria-label="Ganti tema" title="Ganti tema terang / gelap"><span class="theme-icon" aria-hidden="true">☀️</span></button>
       
       <div class="login-header">
         <div class="login-logo">🤖</div>
@@ -428,7 +458,7 @@
         <div class="login-form-group">
           <label class="login-label">
             <span>Kode Akses Masuk</span>
-            <span style="font-weight: normal; color: var(--saweria-yellow);">Wajib diisi</span>
+            <span style="font-weight: normal; color: var(--accent-text);">Wajib diisi</span>
           </label>
           <div class="login-input-wrap">
             <input type="password" id="login-code-input" class="login-input" placeholder="Masukkan kode akses Anda..." autocomplete="off" spellcheck="false">
@@ -453,6 +483,8 @@
   <script src="js/auth-manager.js"></script>
   <script src="js/ocr-token-extractor.js"></script>
   <script src="js/slide-manager.js"></script>
+  <script src="js/theme-manager.js"></script>
+  <script src="js/layout-manager.js"></script>
   <script src="js/app.js"></script>
 
 </body>

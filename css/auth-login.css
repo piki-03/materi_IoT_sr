@@ -17,7 +17,7 @@
 
 .user-role-badge.badge-guru {
   background: rgba(250, 174, 43, 0.15);
-  color: var(--saweria-yellow);
+  color: var(--accent-text);
   border: 1px solid rgba(250, 174, 43, 0.4);
 }
 
@@ -28,9 +28,9 @@
 }
 
 .btn-switch-role {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: var(--bg-surface-3);
+  border: 1px solid var(--border-medium);
+  color: var(--text-primary);
   cursor: pointer;
   font-size: 10px;
   padding: 3px 8px;
@@ -104,7 +104,7 @@ body.role-murid #slide-code {
 #login-modal {
   position: fixed;
   inset: 0;
-  background: rgba(6, 6, 9, 0.92);
+  background: var(--overlay-strong);
   backdrop-filter: blur(16px);
   z-index: 99999;
   display: flex;
@@ -127,7 +127,8 @@ body.role-murid #slide-code {
   background: var(--bg-surface-1);
   border: 1.5px solid var(--saweria-yellow);
   border-radius: var(--radius-xl);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.9), 0 0 50px rgba(250, 174, 43, 0.15);
+  box-shadow: var(--shadow-login);
+  position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -152,7 +153,11 @@ body.role-murid #slide-code {
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  background: radial-gradient(circle at 50% 0%, rgba(250, 174, 43, 0.12) 0%, transparent 80%);
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(250, 174, 43, 0.12) 0%,
+    transparent 80%
+  );
 }
 
 .login-logo {
@@ -216,7 +221,7 @@ body.role-murid #slide-code {
 
 .role-card.active {
   border-color: var(--saweria-yellow);
-  background: rgba(250, 174, 43, 0.1);
+  background: var(--active-tint);
   box-shadow: 0 0 16px rgba(250, 174, 43, 0.2);
 }
 
@@ -266,7 +271,7 @@ body.role-murid #slide-code {
   padding: 12px 16px;
   font-family: var(--font-mono);
   font-size: 14px;
-  color: var(--saweria-yellow);
+  color: var(--accent-text);
   font-weight: 600;
   transition: all var(--transition-fast);
   outline: none;
@@ -295,10 +300,10 @@ body.role-murid #slide-code {
 }
 
 .login-hint-badge code {
-  color: var(--saweria-yellow);
+  color: var(--accent-text);
   font-weight: 700;
   font-family: var(--font-mono);
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--bg-surface-3);
   padding: 2px 6px;
   border-radius: 4px;
 }

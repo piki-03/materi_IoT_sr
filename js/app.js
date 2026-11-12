@@ -1,204 +1,437 @@
 /**
- * MAIN APPLICATION ENTRY POINT
- * Sentral Robotika - Interactive IoT Presentation & Canva-like Studio
+ * SLIDE & CHAPTER MANAGER (CANVA-LIKE WORKSPACE)
+ * Handles slide navigation, chapter additions, inline editing, image uploads, and rendering
  */
 
-// Toast Notification Utility
-window.showToast = function(message, type = "info") {
-  const container = document.getElementById("toast-container");
-  if (!container) return;
+class SlideManager {
+  constructor() {
+    this.slides = StorageManager.loadSlides();
+    this.currentIndex = 0;
+    this.saveTimeout = null;
 
-  const toast = document.createElement("div");
-  toast.className = `toast ${type === "success" ? "toast-success" : type === "error" ? "toast-error" : ""}`;
-  
-  const icon = type === "success" ? "✅" : type === "error" ? "⚠️" : "💡";
-  toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
-  
-  container.appendChild(toast);
+    this.initElements();
+    this.bindEvents();
+    this.renderThumbnails();
+    this.renderCurrentSlide();
+  }
 
-  setTimeout(() => {
-    toast.style.opacity = "0";
-    toast.style.transform = "translateY(10px) scale(0.9)";
-    toast.style.transition = "all 0.3s ease";
-    setTimeout(() => toast.remove(), 300);
-  }, 3200);
-};
+  initElements() {
+    this.thumbnailsList = document.getElementById("slide-thumbnails-list");
+    this.btnAddSlide = document.getElementById("btn-add-slide");
+    this.slideFrame = document.getElementById("current-slide-frame");
 
-document.addEventListener("DOMContentLoaded", () => {
-  // 1. Initialize Subsystems (Auth first, then Slides & OCR)
-  window.authManager = new AuthManager();
-  window.slideManager = new SlideManager();
-  window.tokenExtractor = new OCRTokenExtractor();
+    // Editable Slide Elements
+    this.slideTag = document.getElementById("slide-tag");
+    this.slideTitle = document.getElementById("slide-title");
+    this.slideSubtitle = document.getElementById("slide-subtitle");
+    this.slidePointsList = document.getElementById("slide-points-list");
+    this.slideImage = document.getElementById("slide-image");
+    this.slideCode = document.getElementById("slide-code");
 
-  // 2. Project Title Binding
-  const projectTitleInput = document.getElementById("project-title-input");
-  const projectTitleDisplay = document.getElementById("project-title-display");
-  if (projectTitleInput) {
-    const currentTitle = StorageManager.getProjectTitle();
-    projectTitleInput.value = currentTitle;
-    if (projectTitleDisplay) projectTitleDisplay.textContent = currentTitle;
+    // Image Upload Inputs
+    this.imageUploadInput = document.getElementById("slide-image-input");
+    this.btnUploadImage = document.getElementById("btn-upload-image");
+    this.btnResetImage = document.getElementById("btn-reset-image");
 
-    projectTitleInput.addEventListener("input", () => {
-      StorageManager.setProjectTitle(projectTitleInput.value);
-      if (projectTitleDisplay) projectTitleDisplay.textContent = projectTitleInput.value;
+    // Code Action Buttons
+    this.btnCopyCode = document.getElementById("btn-copy-code");
+    this.btnOpenWokwi = document.getElementById("btn-open-wokwi");
+
+    // Navigation & Counters
+    this.slideCounter = document.getElementById("slide-counter");
+    this.hudCounter = document.getElementById("hud-counter");
+    this.btnPrev = document.getElementById("btn-prev-slide");
+    this.btnNext = document.getElementById("btn-next-slide");
+    this.hudPrev = document.getElementById("hud-prev-slide");
+    this.hudNext = document.getElementById("hud-next-slide");
+  }
+
+  bindEvents() {
+    // Add Chapter Button
+    if (this.btnAddSlide) {
+      this.btnAddSlide.addEventListener("click", () => this.addNewSlide());
+    }
+
+    // Prev / Next Navigation
+    [this.btnPrev, this.hudPrev].forEach(btn => {
+      if (btn) btn.addEventListener("click", () => this.prevSlide());
+    });
+
+    [this.btnNext, this.hudNext].forEach(btn => {
+      if (btn) btn.addEventListener("click", () => this.nextSlide());
+    });
+
+    // Image Upload Handlers
+    if (this.btnUploadImage && this.imageUploadInput) {
+      this.btnUploadImage.addEventListener("click", () => this.imageUploadInput.click());
+      this.imageUploadInput.addEventListener("change", (e) => this.handleImageUpload(e));
+    }
+
+    if (this.btnResetImage) {
+      this.btnResetImage.addEventListener("click", () => {
+        const slide = this.getCurrentSlide();
+        if (slide) {
+          slide.image = "assets/default-diagram.svg";
+          this.slideImage.src = slide.image;
+          this.renderThumbnails();
+          this.triggerAutoSave();
+          window.showToast("Gambar skema dikembalikan ke diagram awal.", "info");
+        }
+      });
+    }
+
+    // Copy Code Handler
+    if (this.btnCopyCode) {
+      this.btnCopyCode.addEventListener("click", () => {
+        const slide = this.getCurrentSlide();
+        if (slide && slide.code) {
+          navigator.clipboard.writeText(slide.code).then(() => {
+            window.showToast("Kode program berhasil disalin!", "success");
+          });
+        }
+      });
+    }
+
+    // Open Wokwi Simulator
+    if (this.btnOpenWokwi) {
+      this.btnOpenWokwi.addEventListener("click", () => {
+        window.open("https://wokwi.com/projects/new/esp32", "_blank");
+      });
+    }
+
+    // Inline Content Editable Event Listeners (Auto Save)
+    this.bindInlineEditable(this.slideTag, (val) => {
+      const slide = this.getCurrentSlide();
+      if (slide) slide.tag = val;
+    });
+
+    this.bindInlineEditable(this.slideTitle, (val) => {
+      const slide = this.getCurrentSlide();
+      if (slide) {
+        slide.title = val;
+        this.renderThumbnails();
+      }
+    });
+
+    this.bindInlineEditable(this.slideSubtitle, (val) => {
+      const slide = this.getCurrentSlide();
+      if (slide) slide.subtitle = val;
+    });
+
+    if (this.slideCode) {
+      this.slideCode.addEventListener("input", () => {
+        const slide = this.getCurrentSlide();
+        if (slide) {
+          slide.code = this.slideCode.innerText;
+          this.triggerAutoSave();
+        }
+      });
+    }
+  }
+
+  bindInlineEditable(element, onUpdate) {
+    if (!element) return;
+    element.addEventListener("input", () => {
+      onUpdate(element.innerText.trim());
+      this.triggerAutoSave();
     });
   }
 
-  // 3. Presentation Mode Toggle
-  const btnTogglePresentation = document.getElementById("btn-toggle-presentation");
-  const hudExitBtn = document.getElementById("hud-exit-presentation");
+  getCurrentSlide() {
+    return this.slides[this.currentIndex] || null;
+  }
 
-  function togglePresentationMode(forceState) {
-    const isCurrentlyPresenting = document.body.classList.contains("presentation-mode");
-    const nextState = forceState !== undefined ? forceState : !isCurrentlyPresenting;
-
-    if (nextState) {
-      document.body.classList.add("presentation-mode");
-      // Request native browser fullscreen if supported
-      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      }
-      window.showToast("Mode Presentasi Aktif. Gunakan tombol Panah Kiri/Kanan untuk berganti bab.", "info");
-    } else {
-      document.body.classList.remove("presentation-mode");
-      if (document.fullscreenElement && document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
-      }
+  goToSlide(index) {
+    if (index >= 0 && index < this.slides.length) {
+      this.currentIndex = index;
+      this.renderThumbnails();
+      this.renderCurrentSlide();
     }
-    window.slideManager.renderCurrentSlide();
   }
 
-  if (btnTogglePresentation) {
-    btnTogglePresentation.addEventListener("click", () => togglePresentationMode(true));
+  nextSlide() {
+    if (this.currentIndex < this.slides.length - 1) {
+      this.goToSlide(this.currentIndex + 1);
+    } else {
+      window.showToast("Ini adalah bab terakhir!", "info");
+    }
   }
 
-  if (hudExitBtn) {
-    hudExitBtn.addEventListener("click", () => togglePresentationMode(false));
+  prevSlide() {
+    if (this.currentIndex > 0) {
+      this.goToSlide(this.currentIndex - 1);
+    } else {
+      window.showToast("Ini adalah bab pertama!", "info");
+    }
   }
 
-  // 4. Keyboard Navigation (Arrows, Space, F, ESC)
-  window.addEventListener("keydown", (e) => {
-    // Avoid triggering navigation when typing in editable elements
-    const isTyping = ["INPUT", "TEXTAREA"].includes(e.target.tagName) || e.target.isContentEditable;
-    
-    // Always allow Escape to exit presentation or close modals
-    if (e.key === "Escape") {
-      togglePresentationMode(false);
-      window.tokenExtractor.closeModal();
-      closeSaweriaModal();
+  addNewSlide() {
+    if (window.authManager && !window.authManager.isGuru()) {
+      window.showToast("Hanya akun Guru yang dapat menambahkan bab baru!", "error");
       return;
     }
 
-    if (isTyping) return;
+    const newSlideNumber = this.slides.length + 1;
+    const newSlide = {
+      id: `bab-${Date.now()}`,
+      tag: `BAB ${newSlideNumber} • MATERI BARU`,
+      title: `Judul Bab ${newSlideNumber}: Topik Baru`,
+      subtitle: "Klik di sini untuk menulis deskripsi ringkas mengenai bab materi ini...",
+      points: [
+        "Poin 1: Penjelasan konsep utama langkah demi langkah.",
+        "Poin 2: Panduan instruksi atau konfigurasi teknis.",
+        "Poin 3: Catatan penting atau tips penyelesaian masalah."
+      ],
+      image: "assets/default-diagram.svg",
+      code: `// Sentral Robotika - Skrip Bab ${newSlideNumber}\nvoid setup() {\n  Serial.begin(115200);\n}\n\nvoid loop() {\n  // Tulis logika Anda di sini\n}`
+    };
 
-    if (e.key === "ArrowRight" || e.key === "PageDown" || (e.key === " " && !e.shiftKey)) {
-      e.preventDefault();
-      window.slideManager.nextSlide();
-    } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
-      e.preventDefault();
-      window.slideManager.prevSlide();
-    } else if (e.key.toLowerCase() === "f") {
-      e.preventDefault();
-      togglePresentationMode();
-    }
-  });
-
-  // 5. Export JSON
-  const btnExport = document.getElementById("btn-export-json");
-  if (btnExport) {
-    btnExport.addEventListener("click", () => {
-      StorageManager.exportToJSON(window.slideManager.slides, projectTitleInput.value);
-      window.showToast("File materi presentasi berhasil diunduh!", "success");
-    });
+    this.slides.push(newSlide);
+    this.currentIndex = this.slides.length - 1;
+    this.renderThumbnails();
+    this.renderCurrentSlide();
+    this.triggerAutoSave();
+    window.showToast(`Bab ${newSlideNumber} berhasil ditambahkan!`, "success");
   }
 
-  // 6. Import JSON
-  const btnImportTrigger = document.getElementById("btn-import-json-trigger");
-  const fileImportInput = document.getElementById("file-import-input");
+  duplicateSlide(index) {
+    if (window.authManager && !window.authManager.isGuru()) {
+      window.showToast("Hanya akun Guru yang dapat menduplikasi bab!", "error");
+      return;
+    }
 
-  if (btnImportTrigger && fileImportInput) {
-    btnImportTrigger.addEventListener("click", () => {
-      if (window.authManager && !window.authManager.isGuru()) {
-        window.showToast("Hanya Guru yang dapat mengimpor file materi!", "error");
-        return;
+    const source = this.slides[index];
+    if (!source) return;
+
+    const copy = JSON.parse(JSON.stringify(source));
+    copy.id = `bab-${Date.now()}`;
+    copy.title = `${copy.title} (Salinan)`;
+    copy.tag = `${copy.tag} • SALINAN`;
+
+    this.slides.splice(index + 1, 0, copy);
+    this.currentIndex = index + 1;
+    this.renderThumbnails();
+    this.renderCurrentSlide();
+    this.triggerAutoSave();
+    window.showToast("Bab berhasil diduplikasi!", "success");
+  }
+
+  deleteSlide(index) {
+    if (window.authManager && !window.authManager.isGuru()) {
+      window.showToast("Hanya akun Guru yang dapat menghapus bab!", "error");
+      return;
+    }
+
+    if (this.slides.length <= 1) {
+      window.showToast("Minimal harus ada 1 bab tutorial!", "error");
+      return;
+    }
+
+    const slideTitle = this.slides[index].title;
+    if (confirm(`Yakin ingin menghapus bab "${slideTitle}"?`)) {
+      this.slides.splice(index, 1);
+      if (this.currentIndex >= this.slides.length) {
+        this.currentIndex = this.slides.length - 1;
       }
-      fileImportInput.click();
-    });
-    fileImportInput.addEventListener("change", (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (file) {
-        StorageManager.importFromJSON(file, (err, importedData) => {
-          if (err) {
-            window.showToast("Gagal mengimpor file: " + err.message, "error");
-          } else {
-            window.slideManager.slides = importedData.slides;
-            window.slideManager.currentIndex = 0;
-            if (importedData.title && projectTitleInput) {
-              projectTitleInput.value = importedData.title;
-              StorageManager.setProjectTitle(importedData.title);
-            }
-            window.slideManager.renderThumbnails();
-            window.slideManager.renderCurrentSlide();
-            window.slideManager.triggerAutoSave();
-            window.showToast("Materi presentasi berhasil dimuat!", "success");
-          }
+      this.renderThumbnails();
+      this.renderCurrentSlide();
+      this.triggerAutoSave();
+      window.showToast("Bab berhasil dihapus.", "info");
+    }
+  }
+
+  handleImageUpload(e) {
+    if (window.authManager && !window.authManager.isGuru()) {
+      window.showToast("Hanya akun Guru yang dapat mengunggah gambar skema!", "error");
+      return;
+    }
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      window.showToast("Harap pilih file gambar yang valid!", "error");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (loadEvent) => {
+      const dataUrl = loadEvent.target.result;
+      const slide = this.getCurrentSlide();
+      if (slide) {
+        slide.image = dataUrl;
+        this.slideImage.src = dataUrl;
+        this.renderThumbnails();
+        this.triggerAutoSave();
+        window.showToast("Gambar skema bab berhasil diperbarui!", "success");
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  renderThumbnails() {
+    if (!this.thumbnailsList) return;
+    this.thumbnailsList.innerHTML = "";
+
+    this.slides.forEach((slide, idx) => {
+      const card = document.createElement("div");
+      card.className = `thumb-card ${idx === this.currentIndex ? "active" : ""}`;
+
+      card.innerHTML = `
+        <div class="thumb-header">
+          <span class="thumb-number">Bab ${idx + 1}</span>
+          <div class="thumb-actions">
+            <button class="thumb-btn duplicate-btn" title="Duplikasi Bab">📋</button>
+            <button class="thumb-btn delete-btn" title="Hapus Bab">🗑️</button>
+          </div>
+        </div>
+        <div class="thumb-title">${slide.title || "Tanpa Judul"}</div>
+        <div class="thumb-preview-mini">
+          <span>${slide.image ? "🖼️ Diagram Skema" : "📄 Konten Slide"}</span>
+        </div>
+      `;
+
+      // Select Slide
+      card.addEventListener("click", (e) => {
+        if (!e.target.closest(".thumb-actions")) {
+          this.goToSlide(idx);
+        }
+      });
+
+      // Actions
+      const dupBtn = card.querySelector(".duplicate-btn");
+      if (dupBtn) {
+        dupBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this.duplicateSlide(idx);
         });
       }
+
+      const delBtn = card.querySelector(".delete-btn");
+      if (delBtn) {
+        delBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this.deleteSlide(idx);
+        });
+      }
+
+      this.thumbnailsList.appendChild(card);
     });
+
+    // Auto scroll active thumbnail into view
+    const activeThumb = this.thumbnailsList.querySelector(".thumb-card.active");
+    if (activeThumb) {
+      activeThumb.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
   }
 
-  // 7. Reset to Default Preset
-  const btnReset = document.getElementById("btn-reset-default");
-  if (btnReset) {
-    btnReset.addEventListener("click", () => {
-      if (window.authManager && !window.authManager.isGuru()) {
-        window.showToast("Hanya Guru yang dapat mereset materi!", "error");
-        return;
-      }
-      if (confirm("Apakah Anda yakin ingin mereset semua bab kembali ke materi bawaan Wokwi & Blynk?")) {
-        window.slideManager.slides = StorageManager.resetToDefault();
-        window.slideManager.currentIndex = 0;
-        if (projectTitleInput) {
-          projectTitleInput.value = "Tutorial Wokwi & Blynk IoT 2.0";
-          StorageManager.setProjectTitle(projectTitleInput.value);
+  renderCurrentSlide() {
+    const slide = this.getCurrentSlide();
+    if (!slide) return;
+
+    const isGuru = !window.authManager || window.authManager.isGuru();
+
+    // Apply smooth fade-in animation
+    if (this.slideFrame) {
+      this.slideFrame.classList.remove("slide-fade-in");
+      void this.slideFrame.offsetWidth; // Trigger reflow
+      this.slideFrame.classList.add("slide-fade-in");
+    }
+
+    // Populate Headers with permission
+    if (this.slideTag) {
+      this.slideTag.innerText = slide.tag || `BAB ${this.currentIndex + 1}`;
+      this.slideTag.contentEditable = isGuru ? "true" : "false";
+    }
+    if (this.slideTitle) {
+      this.slideTitle.innerText = slide.title || "Judul Bab";
+      this.slideTitle.contentEditable = isGuru ? "true" : "false";
+    }
+    if (this.slideSubtitle) {
+      this.slideSubtitle.innerText = slide.subtitle || "";
+      this.slideSubtitle.contentEditable = isGuru ? "true" : "false";
+    }
+
+    // Populate Points with permission
+    if (this.slidePointsList) {
+      this.slidePointsList.innerHTML = "";
+      (slide.points || []).forEach((pt, pIdx) => {
+        const li = document.createElement("li");
+        li.className = "point-item";
+        li.innerHTML = `
+          <div class="point-dot"></div>
+          <div class="point-text editable" contenteditable="${isGuru ? "true" : "false"}">${pt}</div>
+          ${isGuru ? '<button class="btn-icon delete-point-btn" title="Hapus Poin" style="padding:2px 4px; font-size:10px; opacity:0.6;">✕</button>' : ''}
+        `;
+
+        const pointEditable = li.querySelector(".point-text");
+        if (isGuru) {
+          pointEditable.addEventListener("input", () => {
+            slide.points[pIdx] = pointEditable.innerText;
+            this.triggerAutoSave();
+          });
+
+          const delPoint = li.querySelector(".delete-point-btn");
+          if (delPoint) {
+            delPoint.addEventListener("click", () => {
+              slide.points.splice(pIdx, 1);
+              this.renderCurrentSlide();
+              this.triggerAutoSave();
+            });
+          }
         }
-        window.slideManager.renderThumbnails();
-        window.slideManager.renderCurrentSlide();
-        window.showToast("Materi telah direset ke preset Wokwi & Blynk.", "info");
+
+        this.slidePointsList.appendChild(li);
+      });
+
+      // Add "Tambah Poin Materi" Button only for Guru
+      if (isGuru) {
+        const addPtLi = document.createElement("li");
+        addPtLi.style.listStyle = "none";
+        addPtLi.style.marginTop = "8px";
+        addPtLi.innerHTML = `
+          <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px;">
+            <span>+ Tambah Poin Materi</span>
+          </button>
+        `;
+        addPtLi.querySelector("button").addEventListener("click", () => {
+          slide.points.push("Poin penjelasan materi baru...");
+          this.renderCurrentSlide();
+          this.triggerAutoSave();
+        });
+        this.slidePointsList.appendChild(addPtLi);
       }
-    });
+    }
+
+    // Populate Diagram Image
+    if (this.slideImage) {
+      this.slideImage.src = slide.image || "assets/default-diagram.svg";
+    }
+
+    // Populate Code with permission
+    if (this.slideCode) {
+      this.slideCode.innerText = slide.code || "// Belum ada kode untuk bab ini";
+      
+      // Pastikan status editable sinkron dengan peran Guru
+      if (isGuru) {
+        this.slideCode.setAttribute("contenteditable", "true");
+        this.slideCode.classList.add("editable-active");
+      } else {
+        this.slideCode.setAttribute("contenteditable", "false");
+        this.slideCode.classList.remove("editable-active");
+      }
+    }
+
+    // Update Counters
+    const counterText = `Bab ${this.currentIndex + 1} / ${this.slides.length}`;
+    if (this.slideCounter) this.slideCounter.textContent = counterText;
+    if (this.hudCounter) this.hudCounter.textContent = counterText;
   }
 
-  // 8. Saweria Support Modal
-  const saweriaModal = document.getElementById("saweria-support-modal");
-  const btnOpenSaweria = document.getElementById("btn-open-saweria");
-
-  function openSaweriaModal() {
-    if (saweriaModal) saweriaModal.classList.add("active");
+  triggerAutoSave() {
+    clearTimeout(this.saveTimeout);
+    this.saveTimeout = setTimeout(() => {
+      StorageManager.saveSlides(this.slides);
+      console.log("Materi tutorial otomatis tersimpan.");
+    }, 600);
   }
-
-  function closeSaweriaModal() {
-    if (saweriaModal) saweriaModal.classList.remove("active");
-  }
-
-  if (btnOpenSaweria) {
-    btnOpenSaweria.addEventListener("click", openSaweriaModal);
-  }
-
-  // Saweria nominal buttons
-  document.querySelectorAll(".nominal-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".nominal-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      window.showToast(`Nominal dipilih: ${btn.textContent}`, "info");
-    });
-  });
-
-  const btnSimulateDonation = document.getElementById("btn-simulate-donation");
-  if (btnSimulateDonation) {
-    btnSimulateDonation.addEventListener("click", () => {
-      closeSaweriaModal();
-      window.showToast("🎉 Terima kasih atas dukungannya untuk Sentral Robotika!", "success");
-    });
-  }
-});
+}

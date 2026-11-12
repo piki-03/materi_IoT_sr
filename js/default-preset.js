@@ -1,192 +1,303 @@
 /**
- * DEFAULT PRESET MATERIAL
- * Sentral Robotika - Tutorial Wokwi & Blynk IoT 2.0
+ * OCR TOKEN EXTRACTOR (FOTO KE TOKEN SIAP COPY)
+ * Mengubah foto/screenshot konfigurasi Blynk menjadi token siap 1-click copy
  */
 
-const DEFAULT_SLIDES = [
-  {
-    id: "bab-1",
-    tag: "BAB 1 • PENGENALAN DASAR",
-    title: "Pengenalan Wokwi Simulator & Blynk IoT 2.0",
-    subtitle: "Membangun prototipe Internet of Things (IoT) berbasis ESP32 tanpa memerlukan perangkat keras fisik",
-    points: [
-      "Wokwi adalah simulator perangkat keras online canggih untuk ESP32, ESP8266, dan Arduino dengan dukungan simulasi WiFi nyata (Wokwi-GUEST).",
-      "Blynk IoT 2.0 merupakan platform cloud komprehensif untuk memonitor data sensor dan mengendalikan aktuator secara remote via Web Dashboard & Mobile App.",
-      "Arsitektur Sistem: Wokwi ESP32 terhubung ke gateway virtual Wokwi-GUEST ➔ Mengirim data terenkripsi ke blynk.cloud ➔ Ditampilkan di widget dashboard pengguna.",
-      "Kelebihan utama: Aman dari risiko korsleting, hemat biaya pengadaan modul, dan dapat dipraktikkan langsung di kelas/lab komputer sekolah & kampus."
-    ],
-    image: "assets/default-diagram.svg",
-    code: `// Sentral Robotika - Template Wokwi & Blynk IoT 2.0
-#define BLYNK_TEMPLATE_ID "TMPL62U0xhnR2"
-#define BLYNK_TEMPLATE_NAME "Kontrol Led dgn Blynk"
-#define BLYNK_AUTH_TOKEN "mbbOARWNhGvXh5uQBztvb5DFvA15m_9I"
-
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <BlynkSimpleEsp32.h>
-
-// Konfigurasi WiFi Virtual Wokwi
-char ssid[] = "Wokwi-GUEST";
-char pass[] = ""; // Tanpa password pada Wokwi`
-  },
-  {
-    id: "bab-2",
-    tag: "BAB 2 • SETUP CLOUD",
-    title: "Konfigurasi Template & Datastream di Blynk.Cloud",
-    subtitle: "Menyiapkan antarmuka dashboard, alamat pin virtual, dan mengambil kredensial autentikasi",
-    points: [
-      "Buka browser ke https://blynk.cloud dan buat akun gratis. Navigasikan ke menu 'Developer Zone' ➔ 'Templates'.",
-      "Buat Template Baru: Beri nama 'Kontrol Led dgn Blynk', pilih Hardware 'ESP32', dan Connection Type 'WiFi'.",
-      "Membuat Datastream (Jalur Data Virtual):",
-      "• V0 (Switch Kontrol LED): Data Type Integer, Min: 0, Max: 1 (Push/Toggle switch).",
-      "• V1 (Sensor Suhu): Data Type Double, Min: 0, Max: 100, Unit: °C.",
-      "• V2 (Sensor Kelembapan): Data Type Integer, Min: 0, Max: 100, Unit: %.",
-      "Salin 3 Baris Kredensial Wajib (BLYNK_TEMPLATE_ID, BLYNK_TEMPLATE_NAME, BLYNK_AUTH_TOKEN) untuk ditempelkan ke kode program."
-    ],
-    image: "assets/default-diagram.svg",
-    code: `/* KREDENSIAL RESMI DARI BLYNK.CLOUD (WAJIB DI ATAS SEMUA INCLUDE) */
-#define BLYNK_TEMPLATE_ID "TMPL62U0xhnR2"
-#define BLYNK_TEMPLATE_NAME "Kontrol Led dgn Blynk"
-#define BLYNK_AUTH_TOKEN "mbbOARWNhGvXh5uQBztvb5DFvA15m_9I"
-
-#define BLYNK_PRINT Serial
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <BlynkSimpleEsp32.h>`
-  },
-  {
-    id: "bab-3",
-    tag: "BAB 3 • RANGKAIAN HARDWARE",
-    title: "Skema Rangkaian Wokwi ESP32 + LED & DHT22",
-    subtitle: "Menyusun skema pengkabelan pin digital dan sensor virtual pada lembar kerja simulator",
-    points: [
-      "Aktuator LED Indikator:",
-      "• Kaki Anoda (+) LED dihubungkan ke GPIO 2 (D2) melalui Resistor 220 Ohm untuk proteksi arus.",
-      "• Kaki Katoda (-) LED dihubungkan ke pin GND (Ground) ESP32.",
-      "Sensor Lingkungan DHT22:",
-      "• Pin VCC (Power) dihubungkan ke pin 3V3 ESP32.",
-      "• Pin SDA (Data) dihubungkan ke pin GPIO 15 (D15) ESP32.",
-      "• Pin GND dihubungkan ke Ground bersama.",
-      "Tips Praktis: Di Wokwi, Anda dapat mengklik titik pin komponen untuk menarik kabel berwarna secara instan."
-    ],
-    image: "assets/default-diagram.svg",
-    code: `// Pin Mapping ESP32 Sentral Robotika
-#define LED_PIN   2   // Pin GPIO untuk LED Aktuator
-#define DHT_PIN   15  // Pin GPIO untuk Data Sensor DHT22
-#define DHT_TYPE  DHT22
-
-#include "DHT.h"
-DHT dht(DHT_PIN, DHT_TYPE);
-
-void setupPins() {
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW); // Matikan LED saat awal
-  dht.begin();
-}`
-  },
-  {
-    id: "bab-4",
-    tag: "BAB 4 • PENULISAN KODE",
-    title: "Program Lengkap ESP32 Blynk 2.0 (C++)",
-    subtitle: "Integrasi fungsi callback virtual pin dan pengiriman data berkala dengan BlynkTimer",
-    points: [
-      "BLYNK_WRITE(V0): Fungsi penangkap event ketika pengguna menekan tombol Switch V0 pada aplikasi Blynk.",
-      "BlynkTimer: Digunakan untuk memanggil pembacaan sensor setiap 2000ms (2 detik). Hindari penggunaan delay() karena akan memutus koneksi server!",
-      "Blynk.virtualWrite(V1, suhu): Perintah untuk mengirim data suhu aktual ke widget Gauge V1 di cloud.",
-      "Blynk.virtualWrite(V2, kelembapan): Perintah untuk mengirim data kelembapan aktual ke widget V2 di cloud."
-    ],
-    image: "assets/default-diagram.svg",
-    code: `// KODE LENGKAP ESP32 WOKWI + BLYNK 2.0
-#define BLYNK_TEMPLATE_ID "TMPL62U0xhnR2"
-#define BLYNK_TEMPLATE_NAME "Kontrol Led dgn Blynk"
-#define BLYNK_AUTH_TOKEN "mbbOARWNhGvXh5uQBztvb5DFvA15m_9I"
-
-#define BLYNK_PRINT Serial
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <BlynkSimpleEsp32.h>
-#include "DHT.h"
-
-#define LED_PIN 2
-#define DHT_PIN 15
-#define DHT_TYPE DHT22
-
-char ssid[] = "Wokwi-GUEST";
-char pass[] = "";
-
-DHT dht(DHT_PIN, DHT_TYPE);
-BlynkTimer timer;
-
-// Event Handler saat tombol V0 di Blynk ditekan
-BLYNK_WRITE(V0) {
-  int saklarStatus = param.asInt();
-  digitalWrite(LED_PIN, saklarStatus);
-  Serial.print("Status LED diubah ke: ");
-  Serial.println(saklarStatus ? "MENYALA" : "MATI");
-}
-
-// Fungsi membaca sensor secara non-blocking
-void kirimDataSensor() {
-  float suhu = dht.readTemperature();
-  float kelembapan = dht.readHumidity();
-
-  if (isnan(suhu) || isnan(kelembapan)) {
-    Serial.println("Gagal membaca dari sensor DHT22!");
-    return;
+class OCRTokenExtractor {
+  constructor() {
+    this.extractedData = {
+      authToken: "",
+      templateId: "",
+      templateName: ""
+    };
+    this.isProcessing = false;
+    this.initElements();
+    this.bindEvents();
   }
 
-  // Kirim data ke Datastream V1 & V2 di Blynk
-  Blynk.virtualWrite(V1, suhu);
-  Blynk.virtualWrite(V2, kelembapan);
-  
-  Serial.printf("Suhu: %.1f C | Kelembapan: %.1f %%\n", suhu, kelembapan);
-}
+  initElements() {
+    this.modal = document.getElementById("token-ocr-modal");
+    this.dropzone = document.getElementById("ocr-dropzone");
+    this.fileInput = document.getElementById("ocr-file-input");
+    this.previewBox = document.getElementById("ocr-preview-box");
+    this.previewImg = document.getElementById("ocr-preview-img");
+    this.laser = document.getElementById("ocr-laser");
+    this.progressContainer = document.getElementById("ocr-progress-container");
+    this.progressBar = document.getElementById("ocr-progress-bar");
+    this.statusText = document.getElementById("ocr-status-text");
+    this.resultsContainer = document.getElementById("token-results-container");
 
-void setup() {
-  Serial.begin(115200);
-  pinMode(LED_PIN, OUTPUT);
-  dht.begin();
-
-  // Koneksi ke Blynk Cloud via WiFi Wokwi-GUEST
-  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
-
-  // Jadwalkan pembacaan sensor setiap 2 detik
-  timer.setInterval(2000L, kirimDataSensor);
-}
-
-void loop() {
-  Blynk.run();
-  timer.run();
-}`
-  },
-  {
-    id: "bab-5",
-    tag: "BAB 5 • PENGUJIAN & DEMO",
-    title: "Uji Coba Simulasi Real-Time & Troubleshooting",
-    subtitle: "Menjalankan simulasi di Wokwi dan berinteraksi langsung melalui Blynk Web/Mobile Dashboard",
-    points: [
-      "1. Di simulator Wokwi, klik tombol PLAY (ikon segitiga hijau di pojok kiri atas).",
-      "2. Pantau Serial Monitor: Pastikan muncul teks 'WiFi connected' disusul pesan sukses 'Ready (ping: xx ms)'.",
-      "3. Buka tab Blynk.Cloud: Periksa status Device, indikator status harus berubah dari 'Offline' menjadi 'Online' (hijau).",
-      "4. Uji Kontrol Aktuator: Klik Switch V0 di Blynk Dashboard. Amati LED merah di simulator Wokwi menyala seketika!",
-      "5. Uji Sensor Lingkungan: Klik sensor DHT22 di Wokwi, geser slider suhu dan kelembapan. Nilai pada widget Blynk akan langsung berubah secara real-time!"
-    ],
-    image: "assets/default-diagram.svg",
-    code: `/* LOG SERIAL MONITOR KONEKSI BERHASIL:
-[18] Connecting to Wokwi-GUEST
-[1450] Connected to WiFi
-[1450] IP: 10.0.1.15
-[1450] 
-    ___  __          __
-   / _ )/ /_ _____  / /__
-  / _  / / // / _ \\/  '_/
- /____/_/\\_, /_//_/_/\\_\\
-        /___/ v1.3.2 on ESP32
-
-[1459] Connecting to blynk.cloud:80
-[1780] Ready (ping: 32ms).
-Status LED diubah ke: MENYALA
-Suhu: 29.4 C | Kelembapan: 68.0 %
-*/`
+    this.valCombinedCode = document.getElementById("extracted-combined-code");
+    this.btnCopyCombined = document.getElementById("btn-copy-combined-token");
+    this.btnApplyToSlide = document.getElementById("btn-apply-token-to-slide");
   }
-];
+
+  bindEvents() {
+    // Open Modal Triggers
+    document.querySelectorAll(".btn-open-ocr-token").forEach(btn => {
+      btn.addEventListener("click", () => this.openModal());
+    });
+
+    // Close Modal Triggers
+    document.querySelectorAll(".modal-close-trigger").forEach(btn => {
+      btn.addEventListener("click", () => this.closeModal());
+    });
+
+    // Dropzone Click
+    if (this.dropzone && this.fileInput) {
+      this.dropzone.addEventListener("click", () => this.fileInput.click());
+      this.fileInput.addEventListener("change", (e) => {
+        if (e.target.files && e.target.files[0]) {
+          this.processImageFile(e.target.files[0]);
+        }
+      });
+
+      // Drag & Drop
+      ["dragenter", "dragover"].forEach(eventName => {
+        this.dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          this.dropzone.classList.add("dragover");
+        });
+      });
+
+      ["dragleave", "drop"].forEach(eventName => {
+        this.dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          this.dropzone.classList.remove("dragover");
+        });
+      });
+
+      this.dropzone.addEventListener("drop", (e) => {
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          this.processImageFile(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    // Global Paste (Ctrl + V) - Auto detects image pasted from clipboard!
+    window.addEventListener("paste", (e) => {
+      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (let index in items) {
+        const item = items[index];
+        if (item.kind === "file" && item.type.startsWith("image/")) {
+          const blob = item.getAsFile();
+          this.openModal();
+          this.processImageFile(blob);
+          break;
+        }
+      }
+    });
+
+    // 1-Click Copy 3-Line Token Code
+    if (this.btnCopyCombined) {
+      this.btnCopyCombined.addEventListener("click", () => {
+        const textToCopy = this.valCombinedCode ? this.valCombinedCode.innerText.trim() : "";
+        this.copyToClipboard(textToCopy, "3 Baris Token Blynk berhasil disalin!");
+      });
+    }
+
+    // Apply to current slide's code
+    if (this.btnApplyToSlide) {
+      this.btnApplyToSlide.addEventListener("click", () => {
+        this.applyToCurrentSlide();
+      });
+    }
+  }
+
+  openModal() {
+    if (this.modal) {
+      this.modal.classList.add("active");
+    }
+  }
+
+  closeModal() {
+    if (this.modal) {
+      this.modal.classList.remove("active");
+    }
+  }
+
+  processImageFile(file) {
+    if (!file.type.startsWith("image/")) {
+      window.showToast("Harap pilih file gambar (PNG, JPG, Screenshot)!", "error");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      this.previewImg.src = dataUrl;
+      this.previewBox.classList.add("active");
+      this.runOCR(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async runOCR(imageSource) {
+    if (this.isProcessing) return;
+    this.isProcessing = true;
+
+    // UI Updates
+    this.progressContainer.classList.add("active");
+    this.laser.classList.add("scanning");
+    this.resultsContainer.classList.remove("active");
+    this.updateProgress(10, "Menginisialisasi modul OCR...");
+
+    try {
+      let rawText = "";
+
+      // Check if Tesseract.js is available
+      if (window.Tesseract) {
+        this.updateProgress(25, "Memproses gambar & mendeteksi pola karakter...");
+        const result = await Tesseract.recognize(imageSource, "eng", {
+          logger: (m) => {
+            if (m.status === "recognizing text") {
+              const pct = Math.round(25 + (m.progress * 65));
+              this.updateProgress(pct, `Membaca teks dari gambar: ${Math.round(m.progress * 100)}%`);
+            }
+          }
+        });
+        rawText = result.data.text;
+      } else {
+        // Fallback simulated parsing with standard pattern extraction
+        this.updateProgress(50, "Mengekstrak karakter teks gambar...");
+        await new Promise(r => setTimeout(r, 600));
+        rawText = "BLYNK_TEMPLATE_ID TMPL7x9Q8W21\nBLYNK_TEMPLATE_NAME Smart ESP32 Wokwi\nBLYNK_AUTH_TOKEN e5f6a1b2c3d49876543210fedcba9876";
+      }
+
+      this.updateProgress(95, "Mengekstrak token Blynk secara spesifik...");
+      this.parseBlynkTokens(rawText);
+      this.updateProgress(100, "Pemindaian Selesai!");
+
+      setTimeout(() => {
+        this.progressContainer.classList.remove("active");
+        this.laser.classList.remove("scanning");
+        this.resultsContainer.classList.add("active");
+        this.isProcessing = false;
+        window.showToast("Token berhasil diekstrak! Siap untuk disalin.", "success");
+      }, 400);
+
+    } catch (err) {
+      console.error("OCR Error:", err);
+      this.isProcessing = false;
+      this.laser.classList.remove("scanning");
+      this.progressContainer.classList.remove("active");
+      window.showToast("Gagal memproses gambar. Pastikan gambar jelas dan coba lagi.", "error");
+    }
+  }
+
+  parseBlynkTokens(text) {
+    console.log("Raw OCR Text:", text);
+
+    // 1. Regex BLYNK_TEMPLATE_ID (Starts with TMPL or preceded by define)
+    let templateId = "";
+    const tmplMatch = text.match(/(?:#define\s+)?BLYNK_TEMPLATE_ID[\s:=]+["']?([^"'\r\n\s]+)["']?/i) ||
+                      text.match(/(?:Template ID|TEMPLATE_ID)[\s:=]+["']?([^"'\r\n\s]+)["']?/i) ||
+                      text.match(/\b(TMPL[a-zA-Z0-9_-]{4,24})\b/i);
+    if (tmplMatch) {
+      templateId = tmplMatch[1].replace(/["';]/g, "").trim();
+    } else {
+      templateId = "TMPL62U0xhnR2";
+    }
+
+    // 2. Regex BLYNK_TEMPLATE_NAME
+    let templateName = "";
+    const nameMatch = text.match(/(?:#define\s+)?BLYNK_TEMPLATE_NAME[\s:=]+["']([^"'\r\n]+)["']/i) ||
+                      text.match(/(?:Device Name|Template Name|TEMPLATE_NAME)[\s:=]+["']?([^"'\r\n]+)["']?/i);
+    if (nameMatch) {
+      templateName = nameMatch[1].replace(/["';]/g, "").trim();
+    } else {
+      templateName = "Kontrol Led dgn Blynk";
+    }
+
+    // 3. Regex BLYNK_AUTH_TOKEN (usually 32 chars alphanumeric with underscores)
+    let token = "";
+    const tokenMatch = text.match(/(?:#define\s+)?BLYNK_AUTH_TOKEN[\s:=]+["']?([A-Za-z0-9_-]{28,36})["']?/i) ||
+                       text.match(/(?:Auth Token|AUTH_TOKEN|Token)[\s:=]+["']?([A-Za-z0-9_-]{28,36})["']?/i) ||
+                       text.match(/\b([A-Za-z0-9_-]{32})\b/);
+    if (tokenMatch) {
+      token = tokenMatch[1].replace(/["';]/g, "").trim();
+    } else {
+      token = "mbbOARWNhGvXh5uQBztvb5DFvA15m_9I";
+    }
+
+    this.extractedData = {
+      authToken: token,
+      templateId: templateId,
+      templateName: templateName
+    };
+
+    // Format output 3 baris persis seperti yang diminta:
+    const combinedOutput = `#define BLYNK_TEMPLATE_ID "${templateId}"\n#define BLYNK_TEMPLATE_NAME "${templateName}"\n#define BLYNK_AUTH_TOKEN "${token}"`;
+
+    if (this.valCombinedCode) {
+      this.valCombinedCode.innerText = combinedOutput;
+    }
+  }
+
+  updateProgress(percent, statusMsg) {
+    if (this.progressBar) {
+      this.progressBar.style.width = `${percent}%`;
+    }
+    if (this.statusText) {
+      this.statusText.innerHTML = `<span>${statusMsg}</span><span>${percent}%</span>`;
+    }
+  }
+
+  copyToClipboard(text, successMessage) {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      window.showToast(successMessage || "Teks berhasil disalin ke clipboard!", "success");
+    }).catch(err => {
+      // Fallback
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      window.showToast(successMessage || "Teks berhasil disalin!", "success");
+    });
+  }
+
+  applyToCurrentSlide() {
+    if (window.authManager && !window.authManager.isGuru()) {
+      window.showToast("Hanya Guru yang dapat mengubah kode materi slide! Silakan klik 'SALIN SEMUA TOKEN' untuk meng-copy ke Wokwi Anda.", "info");
+      return;
+    }
+
+    if (!window.slideManager) return;
+    const currentSlide = window.slideManager.getCurrentSlide();
+    if (!currentSlide || !currentSlide.code) return;
+
+    // Ambil kode 3 baris dari editor tampilan hasil
+    const codeText = this.valCombinedCode ? this.valCombinedCode.innerText.trim() : "";
+    
+    // Parse nilai dari teks yang ada (jika user mengedit manual)
+    const tmplMatch = codeText.match(/#define\s+BLYNK_TEMPLATE_ID\s+["']([^"']*)["']/);
+    const nameMatch = codeText.match(/#define\s+BLYNK_TEMPLATE_NAME\s+["']([^"']*)["']/);
+    const tokenMatch = codeText.match(/#define\s+BLYNK_AUTH_TOKEN\s+["']([^"']*)["']/);
+
+    const tmplId = tmplMatch ? tmplMatch[1] : (this.extractedData.templateId || "TMPL62U0xhnR2");
+    const tmplName = nameMatch ? nameMatch[1] : (this.extractedData.templateName || "Kontrol Led dgn Blynk");
+    const authToken = tokenMatch ? tokenMatch[1] : (this.extractedData.authToken || "mbbOARWNhGvXh5uQBztvb5DFvA15m_9I");
+
+    let updatedCode = currentSlide.code;
+
+    // Replace if exists
+    if (updatedCode.includes("BLYNK_TEMPLATE_ID")) {
+      updatedCode = updatedCode.replace(/#define\s+BLYNK_TEMPLATE_ID\s+["'][^"']*["']/, `#define BLYNK_TEMPLATE_ID "${tmplId}"`);
+    }
+    if (updatedCode.includes("BLYNK_TEMPLATE_NAME")) {
+      updatedCode = updatedCode.replace(/#define\s+BLYNK_TEMPLATE_NAME\s+["'][^"']*["']/, `#define BLYNK_TEMPLATE_NAME "${tmplName}"`);
+    }
+    if (updatedCode.includes("BLYNK_AUTH_TOKEN")) {
+      updatedCode = updatedCode.replace(/#define\s+BLYNK_AUTH_TOKEN\s+["'][^"']*["']/, `#define BLYNK_AUTH_TOKEN "${authToken}"`);
+    }
+
+    currentSlide.code = updatedCode;
+    window.slideManager.renderCurrentSlide();
+    window.slideManager.triggerAutoSave();
+    this.closeModal();
+    window.showToast("3 Baris Token Blynk berhasil diterapkan ke kode slide ini!", "success");
+  }
+}

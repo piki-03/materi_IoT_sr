@@ -1,91 +1,204 @@
 /**
- * STORAGE MANAGER
- * Manages LocalStorage, File Export/Import (JSON), and Image persistence
+ * MAIN APPLICATION ENTRY POINT
+ * Sentral Robotika - Interactive IoT Presentation & Canva-like Studio
  */
 
-const STORAGE_KEY = "sentral_robotika_slides_v1";
-const TITLE_STORAGE_KEY = "sentral_robotika_title_v1";
+// Toast Notification Utility
+window.showToast = function(message, type = "info") {
+  const container = document.getElementById("toast-container");
+  if (!container) return;
 
-class StorageManager {
-  static getProjectTitle() {
-    return localStorage.getItem(TITLE_STORAGE_KEY) || "Tutorial Wokwi & Blynk IoT 2.0";
+  const toast = document.createElement("div");
+  toast.className = `toast ${type === "success" ? "toast-success" : type === "error" ? "toast-error" : ""}`;
+  
+  const icon = type === "success" ? "✅" : type === "error" ? "⚠️" : "💡";
+  toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+  
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(10px) scale(0.9)";
+    toast.style.transition = "all 0.3s ease";
+    setTimeout(() => toast.remove(), 300);
+  }, 3200);
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  // 1. Initialize Subsystems (Auth first, then Slides & OCR)
+  window.authManager = new AuthManager();
+  window.slideManager = new SlideManager();
+  window.tokenExtractor = new OCRTokenExtractor();
+
+  // 2. Project Title Binding
+  const projectTitleInput = document.getElementById("project-title-input");
+  const projectTitleDisplay = document.getElementById("project-title-display");
+  if (projectTitleInput) {
+    const currentTitle = StorageManager.getProjectTitle();
+    projectTitleInput.value = currentTitle;
+    if (projectTitleDisplay) projectTitleDisplay.textContent = currentTitle;
+
+    projectTitleInput.addEventListener("input", () => {
+      StorageManager.setProjectTitle(projectTitleInput.value);
+      if (projectTitleDisplay) projectTitleDisplay.textContent = projectTitleInput.value;
+    });
   }
 
-  static setProjectTitle(title) {
-    localStorage.setItem(TITLE_STORAGE_KEY, title);
-  }
+  // 3. Presentation Mode Toggle
+  const btnTogglePresentation = document.getElementById("btn-toggle-presentation");
+  const hudExitBtn = document.getElementById("hud-exit-presentation");
 
-  static loadSlides() {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
+  function togglePresentationMode(forceState) {
+    const isCurrentlyPresenting = document.body.classList.contains("presentation-mode");
+    const nextState = forceState !== undefined ? forceState : !isCurrentlyPresenting;
+
+    if (nextState) {
+      document.body.classList.add("presentation-mode");
+      // Request native browser fullscreen if supported
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
       }
-    } catch (e) {
-      console.warn("Gagal membaca LocalStorage, memuat preset default:", e);
+      window.showToast("Mode Presentasi Aktif. Gunakan tombol Panah Kiri/Kanan untuk berganti bab.", "info");
+    } else {
+      document.body.classList.remove("presentation-mode");
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
     }
-    // Return deep copy of default slides
-    return JSON.parse(JSON.stringify(DEFAULT_SLIDES));
+    window.slideManager.renderCurrentSlide();
   }
 
-  static saveSlides(slides) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(slides));
-      return true;
-    } catch (e) {
-      console.error("Gagal menyimpan ke LocalStorage:", e);
-      // Quota exceeded possible with very large images
-      return false;
-    }
+  if (btnTogglePresentation) {
+    btnTogglePresentation.addEventListener("click", () => togglePresentationMode(true));
   }
 
-  static resetToDefault() {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(TITLE_STORAGE_KEY);
-    return JSON.parse(JSON.stringify(DEFAULT_SLIDES));
+  if (hudExitBtn) {
+    hudExitBtn.addEventListener("click", () => togglePresentationMode(false));
   }
 
-  static exportToJSON(slides, projectTitle) {
-    const data = {
-      title: projectTitle || StorageManager.getProjectTitle(),
-      exportedAt: new Date().toISOString(),
-      author: "Sentral Robotika Studio",
-      slides: slides
-    };
-
-    const jsonStr = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
+  // 4. Keyboard Navigation (Arrows, Space, F, ESC)
+  window.addEventListener("keydown", (e) => {
+    // Avoid triggering navigation when typing in editable elements
+    const isTyping = ["INPUT", "TEXTAREA"].includes(e.target.tagName) || e.target.isContentEditable;
     
-    const a = document.createElement("a");
-    const safeTitle = (projectTitle || "Sentral_Robotika_Tutorial").replace(/[^a-zA-Z0-9_-]/g, "_");
-    a.href = url;
-    a.download = `${safeTitle}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Always allow Escape to exit presentation or close modals
+    if (e.key === "Escape") {
+      togglePresentationMode(false);
+      window.tokenExtractor.closeModal();
+      closeSaweriaModal();
+      return;
+    }
+
+    if (isTyping) return;
+
+    if (e.key === "ArrowRight" || e.key === "PageDown" || (e.key === " " && !e.shiftKey)) {
+      e.preventDefault();
+      window.slideManager.nextSlide();
+    } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+      e.preventDefault();
+      window.slideManager.prevSlide();
+    } else if (e.key.toLowerCase() === "f") {
+      e.preventDefault();
+      togglePresentationMode();
+    }
+  });
+
+  // 5. Export JSON
+  const btnExport = document.getElementById("btn-export-json");
+  if (btnExport) {
+    btnExport.addEventListener("click", () => {
+      StorageManager.exportToJSON(window.slideManager.slides, projectTitleInput.value);
+      window.showToast("File materi presentasi berhasil diunduh!", "success");
+    });
   }
 
-  static importFromJSON(file, callback) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const parsed = JSON.parse(e.target.result);
-        if (parsed.slides && Array.isArray(parsed.slides)) {
-          callback(null, parsed);
-        } else if (Array.isArray(parsed)) {
-          callback(null, { title: "Tutorial Impor", slides: parsed });
-        } else {
-          callback(new Error("Format file JSON tidak valid atau tidak memiliki daftar slides"));
-        }
-      } catch (err) {
-        callback(err);
+  // 6. Import JSON
+  const btnImportTrigger = document.getElementById("btn-import-json-trigger");
+  const fileImportInput = document.getElementById("file-import-input");
+
+  if (btnImportTrigger && fileImportInput) {
+    btnImportTrigger.addEventListener("click", () => {
+      if (window.authManager && !window.authManager.isGuru()) {
+        window.showToast("Hanya Guru yang dapat mengimpor file materi!", "error");
+        return;
       }
-    };
-    reader.readAsText(file);
+      fileImportInput.click();
+    });
+    fileImportInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        StorageManager.importFromJSON(file, (err, importedData) => {
+          if (err) {
+            window.showToast("Gagal mengimpor file: " + err.message, "error");
+          } else {
+            window.slideManager.slides = importedData.slides;
+            window.slideManager.currentIndex = 0;
+            if (importedData.title && projectTitleInput) {
+              projectTitleInput.value = importedData.title;
+              StorageManager.setProjectTitle(importedData.title);
+            }
+            window.slideManager.renderThumbnails();
+            window.slideManager.renderCurrentSlide();
+            window.slideManager.triggerAutoSave();
+            window.showToast("Materi presentasi berhasil dimuat!", "success");
+          }
+        });
+      }
+    });
   }
-}
+
+  // 7. Reset to Default Preset
+  const btnReset = document.getElementById("btn-reset-default");
+  if (btnReset) {
+    btnReset.addEventListener("click", () => {
+      if (window.authManager && !window.authManager.isGuru()) {
+        window.showToast("Hanya Guru yang dapat mereset materi!", "error");
+        return;
+      }
+      if (confirm("Apakah Anda yakin ingin mereset semua bab kembali ke materi bawaan Wokwi & Blynk?")) {
+        window.slideManager.slides = StorageManager.resetToDefault();
+        window.slideManager.currentIndex = 0;
+        if (projectTitleInput) {
+          projectTitleInput.value = "Tutorial Wokwi & Blynk IoT 2.0";
+          StorageManager.setProjectTitle(projectTitleInput.value);
+        }
+        window.slideManager.renderThumbnails();
+        window.slideManager.renderCurrentSlide();
+        window.showToast("Materi telah direset ke preset Wokwi & Blynk.", "info");
+      }
+    });
+  }
+
+  // 8. Saweria Support Modal
+  const saweriaModal = document.getElementById("saweria-support-modal");
+  const btnOpenSaweria = document.getElementById("btn-open-saweria");
+
+  function openSaweriaModal() {
+    if (saweriaModal) saweriaModal.classList.add("active");
+  }
+
+  function closeSaweriaModal() {
+    if (saweriaModal) saweriaModal.classList.remove("active");
+  }
+
+  if (btnOpenSaweria) {
+    btnOpenSaweria.addEventListener("click", openSaweriaModal);
+  }
+
+  // Saweria nominal buttons
+  document.querySelectorAll(".nominal-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".nominal-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      window.showToast(`Nominal dipilih: ${btn.textContent}`, "info");
+    });
+  });
+
+  const btnSimulateDonation = document.getElementById("btn-simulate-donation");
+  if (btnSimulateDonation) {
+    btnSimulateDonation.addEventListener("click", () => {
+      closeSaweriaModal();
+      window.showToast("🎉 Terima kasih atas dukungannya untuk Sentral Robotika!", "success");
+    });
+  }
+});

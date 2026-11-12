@@ -15,26 +15,30 @@ body.presentation-mode #bottom-bar {
 
 body.presentation-mode #workspace {
   height: 100vh;
-  width: 100vw;
+  height: 100dvh;
+  width: 100%;
 }
 
 body.presentation-mode #canvas-area {
   padding: 0;
-  width: 100vw;
+  width: 100%;
   height: 100vh;
-  background: #08080A;
+  height: 100dvh;
+  background: var(--presentation-canvas-bg);
 }
 
 body.presentation-mode .slide-frame {
-  max-width: 100vw;
-  width: 100vw;
-  height: 100vh;
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  aspect-ratio: auto;
   min-height: 100vh;
+  min-height: 100dvh;
   border-radius: 0;
   border: none;
   padding: 48px 72px 80px 72px;
   box-shadow: none;
-  background: radial-gradient(circle at 50% 20%, #161620 0%, #0a0a0d 100%);
+  background: var(--presentation-frame-bg);
 }
 
 body.presentation-mode .slide-title {
@@ -65,7 +69,7 @@ body.presentation-mode .code-editor-area {
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(22, 22, 29, 0.88);
+  background: var(--hud-bg);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-full);
@@ -74,7 +78,7 @@ body.presentation-mode .code-editor-area {
   align-items: center;
   gap: 14px;
   z-index: 9999;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-lg);
   opacity: 0.2;
   transition: opacity var(--transition-normal);
 }
@@ -91,7 +95,7 @@ body.presentation-mode:hover #presentation-hud {
 .hud-counter {
   font-size: 13px;
   font-weight: 700;
-  color: var(--saweria-yellow);
+  color: var(--accent-text);
   min-width: 80px;
   text-align: center;
 }

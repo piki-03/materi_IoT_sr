@@ -78,3 +78,14 @@ file:///D:/SENTRAL_ROBOTIK/WEB_SENTRAL_ROBOTIKA/index.html
 ```
 
 Aplikasi ini 100% berjalan di sisi browser (*client-side*), tidak memerlukan instalasi backend maupun server rumit, dan dapat dijalankan secara offline maupun online.
+
+---
+
+## 🌗 Mode Terang / Gelap
+- Tombol **☀️ / 🌙** ada di topbar, di HUD mode presentasi, dan di layar login.
+- Pilihan disimpan di browser (`LocalStorage`). Jika belum memilih, tema mengikuti pengaturan sistem (`prefers-color-scheme`).
+- Semua warna berada di variabel CSS (`css/saweria-theme.css`: blok `:root` dan `:root[data-theme="light"]`). Ubah di sana untuk mengganti palet.
+
+## 📱 Responsif (semua perangkat)
+- `css/responsive.css` (dimuat terakhir) + `js/layout-manager.js`.
+- ≥1800px: layar lebar · ≤1100px: tombol topbar jadi ikon · ≤960px: daftar bab menjadi **drawer** (tombol ☰), slide 1 kolom · ≤640px: topbar 2 baris, modal hampir layar penuh · mendukung landscape ponsel, layar sentuh, dan safe-area (notch).
